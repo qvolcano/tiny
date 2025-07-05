@@ -1,0 +1,243 @@
+{
+  "name": "tiny.common",
+  "version": "1.0.0",
+  "description": "单小\r 便捷\r 灵活",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "bpush": "gulp&& git add . && git commit -m update && git push",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://e.coding.net/qvolcano/tiny/common.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@ailhc/egf-cli": "^3.0.9",
+    "@babel/core": "^7.23.7",
+    "@babel/preset-env": "^7.23.8",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.2",
+    "@rollup/stream": "^3.0.1",
+    "glob": "^10.3.10",
+    "gulp": "^4.0.0",
+    "gulp-clean": "^0.4.0",
+    "gulp-ts-index": "^1.1.1",
+    "rollup": "^3.29.4",
+    "rollup-plugin-dts": "^5.3.1",
+    "typescript": "^5.3.3",
+    "vinyl-buffer": "^1.0.1",
+    "vinyl-source-stream": "^2.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "typesVersions": {
+    "*": {
+      "broadcast": [
+        "dist\\broadcast\\index.d.ts"
+      ],
+      "collection": [
+        "dist\\collection\\index.d.ts"
+      ],
+      "definition": [
+        "dist\\definition\\index.d.ts"
+      ],
+      "ecs": [
+        "dist\\ecs\\index.d.ts"
+      ],
+      "event": [
+        "dist\\event\\index.d.ts"
+      ],
+      "flow": [
+        "dist\\flow\\index.d.ts"
+      ],
+      "lobby": [
+        "dist\\lobby\\index.d.ts"
+      ],
+      "map": [
+        "dist\\map\\index.d.ts"
+      ],
+      "math": [
+        "dist\\math\\index.d.ts"
+      ],
+      "ms": [
+        "dist\\ms\\index.d.ts"
+      ],
+      "mvc": [
+        "dist\\mvc\\index.d.ts"
+      ],
+      "queue": [
+        "dist\\queue\\index.d.ts"
+      ],
+      "reducer": [
+        "dist\\reducer\\index.d.ts"
+      ],
+      "scene": [
+        "dist\\scene\\index.d.ts"
+      ],
+      "scripts": [
+        "dist\\scripts\\index.d.ts"
+      ],
+      "server": [
+        "dist\\server\\index.d.ts"
+      ],
+      "services": [
+        "dist\\services\\index.d.ts"
+      ],
+      "sheet": [
+        "dist\\sheet\\index.d.ts"
+      ],
+      "status": [
+        "dist\\status\\index.d.ts"
+      ],
+      "syncframe": [
+        "dist\\syncframe\\index.d.ts"
+      ],
+      "system": [
+        "dist\\system\\index.d.ts"
+      ],
+      "table": [
+        "dist\\table\\index.d.ts"
+      ],
+      "task": [
+        "dist\\task\\index.d.ts"
+      ],
+      "trigger": [
+        "dist\\trigger\\index.d.ts"
+      ],
+      "view": [
+        "dist\\view\\index.d.ts"
+      ],
+      "window": [
+        "dist\\window\\index.d.ts"
+      ],
+      "world": [
+        "dist\\world\\index.d.ts"
+      ],
+      ".": [
+        "dist/index.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    "./broadcast": {
+      "require": "./dist/broadcast\\index.cjs.js",
+      "import": "./dist/broadcast\\index.js"
+    },
+    "./collection": {
+      "require": "./dist/collection\\index.cjs.js",
+      "import": "./dist/collection\\index.js"
+    },
+    "./definition": {
+      "require": "./dist/definition\\index.cjs.js",
+      "import": "./dist/definition\\index.js"
+    },
+    "./ecs": {
+      "require": "./dist/ecs\\index.cjs.js",
+      "import": "./dist/ecs\\index.js"
+    },
+    "./event": {
+      "require": "./dist/event\\index.cjs.js",
+      "import": "./dist/event\\index.js"
+    },
+    "./flow": {
+      "require": "./dist/flow\\index.cjs.js",
+      "import": "./dist/flow\\index.js"
+    },
+    "./lobby": {
+      "require": "./dist/lobby\\index.cjs.js",
+      "import": "./dist/lobby\\index.js"
+    },
+    "./map": {
+      "require": "./dist/map\\index.cjs.js",
+      "import": "./dist/map\\index.js"
+    },
+    "./math": {
+      "require": "./dist/math\\index.cjs.js",
+      "import": "./dist/math\\index.js"
+    },
+    "./ms": {
+      "require": "./dist/ms\\index.cjs.js",
+      "import": "./dist/ms\\index.js"
+    },
+    "./mvc": {
+      "require": "./dist/mvc\\index.cjs.js",
+      "import": "./dist/mvc\\index.js"
+    },
+    "./queue": {
+      "require": "./dist/queue\\index.cjs.js",
+      "import": "./dist/queue\\index.js"
+    },
+    "./reducer": {
+      "require": "./dist/reducer\\index.cjs.js",
+      "import": "./dist/reducer\\index.js"
+    },
+    "./scene": {
+      "require": "./dist/scene\\index.cjs.js",
+      "import": "./dist/scene\\index.js"
+    },
+    "./scripts": {
+      "require": "./dist/scripts\\index.cjs.js",
+      "import": "./dist/scripts\\index.js"
+    },
+    "./server": {
+      "require": "./dist/server\\index.cjs.js",
+      "import": "./dist/server\\index.js"
+    },
+    "./services": {
+      "require": "./dist/services\\index.cjs.js",
+      "import": "./dist/services\\index.js"
+    },
+    "./sheet": {
+      "require": "./dist/sheet\\index.cjs.js",
+      "import": "./dist/sheet\\index.js"
+    },
+    "./status": {
+      "require": "./dist/status\\index.cjs.js",
+      "import": "./dist/status\\index.js"
+    },
+    "./syncframe": {
+      "require": "./dist/syncframe\\index.cjs.js",
+      "import": "./dist/syncframe\\index.js"
+    },
+    "./system": {
+      "require": "./dist/system\\index.cjs.js",
+      "import": "./dist/system\\index.js"
+    },
+    "./table": {
+      "require": "./dist/table\\index.cjs.js",
+      "import": "./dist/table\\index.js"
+    },
+    "./task": {
+      "require": "./dist/task\\index.cjs.js",
+      "import": "./dist/task\\index.js"
+    },
+    "./trigger": {
+      "require": "./dist/trigger\\index.cjs.js",
+      "import": "./dist/trigger\\index.js"
+    },
+    "./view": {
+      "require": "./dist/view\\index.cjs.js",
+      "import": "./dist/view\\index.js"
+    },
+    "./window": {
+      "require": "./dist/window\\index.cjs.js",
+      "import": "./dist/window\\index.js"
+    },
+    "./world": {
+      "require": "./dist/world\\index.cjs.js",
+      "import": "./dist/world\\index.js"
+    },
+    ".": {
+      "require": "./dist/index.cjs.js",
+      "import": "./dist/index.js"
+    }
+  }
+}

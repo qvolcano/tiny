@@ -1,0 +1,4 @@
+class SyncDict {
+}
+
+export { SyncDict };

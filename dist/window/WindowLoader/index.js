@@ -1,0 +1,4 @@
+class WindowLoader {
+}
+
+export { WindowLoader };
