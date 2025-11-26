@@ -1,2 +1,6 @@
-/***auto-create-index***/
-export * from "./IService";
+interface IService {
+    start(): void;
+    stop(): void;
+}
+
+export { IService };

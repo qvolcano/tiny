@@ -1,2 +1,5 @@
-/***auto-create-index***/
-export * from "./Type";
+type Type<T> = {
+    name?: string;
+} & (new (...args: any) => T);
+
+export { Type };

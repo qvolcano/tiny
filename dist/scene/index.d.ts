@@ -1,2 +1,4 @@
-/***auto-create-index***/
-export * from "./IScene";
+interface IScene {
+}
+
+export { IScene };

@@ -1,7 +1,19 @@
-/***auto-create-index***/
-export * from "./Command";
-export * from "./Context";
-export * from "./Control";
-export * from "./Model";
-export * from "./Track";
-export * from "./View";
+declare class Control {
+}
+
+declare class Context {
+    controls: {
+        [key: string]: Control;
+    };
+    registerControl(): void;
+}
+
+declare class Model {
+    context: Context;
+}
+
+declare class View {
+    context: Context;
+}
+
+export { Model, View };

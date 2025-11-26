@@ -1,4 +1,6 @@
-export declare class Lobby {
+declare class Lobby {
 }
-export declare class Room {
+declare class Room {
 }
+
+export { Lobby, Room };

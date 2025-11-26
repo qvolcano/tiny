@@ -12,13 +12,13 @@ class Dict {
     }
     remove(key) {
         let index = this._index[key];
-        if (index) {
+        if (index != null) {
             let last = this._values.length - 1;
             let value = this._values[index];
-            if (index < this._values.length - 1) {
+            if (index < last) {
                 this._values[index] = this._values[last];
                 this._keys[index] = this._keys[last];
-                this._index[last] = index;
+                this._index[this._keys[index]] = index;
             }
             this._values.length = last;
             this._keys.length = last;
@@ -27,7 +27,7 @@ class Dict {
         }
     }
     get(key) {
-        if (this._index[key]) {
+        if (this._index[key] != null) {
             return this._values[this._index[key]];
         }
     }

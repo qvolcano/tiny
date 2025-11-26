@@ -1,6 +1,7 @@
-import { SingletonMap, TableList } from "../collection";
-import { Type } from "../lobby/system";
-export declare class World<T> {
+import { S as SingletonMap, T as Type } from '../SingletonMap-5c09553f.js';
+import { T as TableList } from '../TableList-bbe6535b.js';
+
+declare class World<T> {
     indexerMap: SingletonMap<Indexer<T>>;
     indexerList: TableList<string, Indexer<T>>;
     systems: Map<string, System>;
@@ -11,22 +12,24 @@ export declare class World<T> {
     getIndexer<K extends Indexer<T>>(type: Type<K>): K | undefined;
     addSystem(key: string, system: System): void;
 }
-export interface IUnit {
+interface IUnit {
 }
-export interface Indexer<T> {
+interface Indexer<T> {
     addUnit(unit: any): T;
     updateUnit(unit: any): void;
     removeUnit(unit: any): T;
     getUnit(key: any): T | undefined;
     getUnits(key: any): T[] | undefined;
 }
-export declare class ComponentIndexer implements Indexer<Object> {
+declare class ComponentIndexer implements Indexer<Object> {
     addUnit(unit: any): Object;
     removeUnit(unit: any): Object;
     getUnit(key: any): Object | undefined;
     getUnits(key: any): Object[] | undefined;
     updateUnit(unit: any): void;
 }
-export interface System {
+interface System {
     context?: World<any>;
 }
+
+export { ComponentIndexer, IUnit, Indexer, System, World };

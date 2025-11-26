@@ -3,8 +3,6 @@
  */
 
 
-// Export interfaces
-import { IResource } from './IResource';
 import { IDocument } from './IDocument';
 import { IEditor } from './IEditor';
 import { ICommand } from './CommandManager';
@@ -21,36 +19,24 @@ import { EventManager } from './EventManager';
 import { DocumentManager } from './DocumentManager';
 import { TriggerManager } from './TriggerManager';
 import { PluginManager } from './PluginManager';
-import { SingletonFactory } from '../collection';
-
-
-interface Injectable<T>{
-    context:T
-}
-
-export function Injector<T,K = Object>(context:K){
-    return function(constructor:new()=>T){
-        let obj = new constructor() as any
-        obj.context = context;
-        return obj
-    }
-}
 
 
 export class ViewService implements IService{
-    id: string;
-    name: string;
-    init(): Promise<boolean> {
-        throw new Error('Method not implemented.');
-    }
-    dispose(): void {
-        throw new Error('Method not implemented.');
-    }
-    isRunning(): boolean {
-        throw new Error('Method not implemented.');
-    }
-    test(){
+    public readonly id = 'view';
+    public readonly name = 'View Service';
+    private running = false;
 
+    async init(): Promise<boolean> {
+        this.running = true;
+        return true;
+    }
+
+    dispose(): void {
+        this.running = false;
+    }
+
+    isRunning(): boolean {
+        return this.running;
     }
 }
 /**
@@ -60,7 +46,7 @@ export class Editor {
     // Manager instances
     public readonly resourceManager: ResourceManager;
     public readonly commandManager: CommandManager;
-    public readonly serviceManager: SingletonFactory<IService>;
+    public readonly serviceManager: ServiceManager;
     public readonly eventManager: EventManager;
     public readonly documentManager: DocumentManager;
     public readonly triggerManager: TriggerManager;
@@ -70,7 +56,7 @@ export class Editor {
         // Initialize all managers
         this.resourceManager = new ResourceManager();
         this.commandManager = new CommandManager();
-        this.serviceManager = new SingletonFactory<IService>(true,true,Injector<IService>(this));
+        this.serviceManager = new ServiceManager();
         this.eventManager = new EventManager();
         this.documentManager = new DocumentManager();
         this.triggerManager = new TriggerManager();
@@ -82,13 +68,11 @@ export class Editor {
      */
     public async init(): Promise<void> {
         // Initialize services
-        this.serviceManager.get(ViewService).
+        const viewService = new ViewService();
+        this.serviceManager.registerService(viewService);
+        await this.serviceManager.startService(viewService.id);
         // Initialize plugins
         await this.pluginManager.initializePlugins();
-
-        this.resourceManager.registerLoader("*", (resource: IResource) => {
-            return resource.load();
-        });
     }
     
     /**

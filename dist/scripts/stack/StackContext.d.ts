@@ -1,6 +1,6 @@
 import { Bindings } from "../Bindings";
-import { ScriptContext } from "../ScriptContext";
-export declare class StackFlowContext implements ScriptContext {
+import { IScriptContext } from "../ScriptContext";
+export declare class StackFlowContext implements IScriptContext {
     bindingsList: any;
     runtime: StackRuntime;
     constructor();
@@ -9,11 +9,11 @@ export declare class StackFlowContext implements ScriptContext {
     eval(script: string, bindings: Bindings): void;
     get(key: string): void;
     getBindings(scope: number): Bindings;
-    getContext(): ScriptContext;
-    getScriptContext(nn: Bindings): ScriptContext;
+    getContext(): IScriptContext;
+    getScriptContext(nn: Bindings): IScriptContext;
     put(key: string, value: any): void;
     setBindings(bindings: Bindings, scope: number): void;
-    setContext(ctxt: ScriptContext): void;
+    setContext(ctxt: IScriptContext): void;
     compile(script: string): Function;
 }
 export declare class StackRuntime {

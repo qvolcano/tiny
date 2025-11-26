@@ -1,27 +1,44 @@
 'use strict';
 
-var TagDict = require('../collection/TagDict/index.cjs.js');
+var TableList = require('../collection/TableList/index.cjs.js');
 
 class Context {
     constructor() {
-        this.components = new TagDict.TagDict();
-    }
-    createEntity() {
-        return Context.entity_id++;
+        this.tags = {};
     }
     addComponent(entity, type, component) {
-        this.components.add(entity, type, component);
+        if (this.tags[type] == null) {
+            this.tags[type] = new TableList.TableList();
+        }
+        return this.tags[type].add(entity, component);
     }
     removeComponent(entity, type) {
-        this.components.remove(entity, type);
+        if (this.tags[type] != null) {
+            return this.tags[type].remove(entity);
+        }
+        return undefined;
     }
     getComponent(entity, type) {
-        return this.components.get(entity, type);
+        if (this.tags[type] != null) {
+            return this.tags[type].get(entity);
+        }
     }
     getComponents(type) {
-        return this.components.getTagValues(type);
+        if (this.tags[type] != null) {
+            return this.tags[type].values();
+        }
+        return [];
+    }
+    getComponentsByEntity(entity) {
+        let list = [];
+        for (let i in this.tags) {
+            let com = this.getComponent(entity, Number(i));
+            if (com != null) {
+                list.push(com);
+            }
+        }
+        return list;
     }
 }
-Context.entity_id = 0;
 
 exports.Context = Context;

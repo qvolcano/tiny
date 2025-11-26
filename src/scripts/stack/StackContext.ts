@@ -1,7 +1,7 @@
 import { Bindings } from "../Bindings";
-import { ScriptContext } from "../ScriptContext";
+import { IScriptContext } from "../ScriptContext";
 
-export class StackFlowContext implements ScriptContext {
+export class StackFlowContext implements IScriptContext {
     bindingsList:any = []
     runtime!: StackRuntime;
     constructor() {
@@ -51,10 +51,10 @@ export class StackFlowContext implements ScriptContext {
     getBindings(scope: number): Bindings {
         throw new Error("Method not implemented.");
     }
-    getContext(): ScriptContext {
+    getContext(): IScriptContext {
         throw new Error("Method not implemented.");
     }
-    getScriptContext(nn: Bindings): ScriptContext {
+    getScriptContext(nn: Bindings): IScriptContext {
         throw new Error("Method not implemented.");
     }
     put(key: string, value: any): void {
@@ -63,7 +63,7 @@ export class StackFlowContext implements ScriptContext {
     setBindings(bindings: Bindings, scope: number): void {
         throw new Error("Method not implemented.");
     }
-    setContext(ctxt: ScriptContext): void {
+    setContext(ctxt: IScriptContext): void {
         throw new Error("Method not implemented.");
     }
 

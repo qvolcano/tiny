@@ -1,3 +1,84 @@
+let TableList$1 = class TableList {
+    constructor() {
+        this._index = {};
+        this._keys = [];
+        this._values = [];
+    }
+    add(key, value) {
+        this._index[key] = this._values.length;
+        this._values.push(value);
+        this._keys.push(key);
+        return value;
+    }
+    remove(key) {
+        let index = this._index[key];
+        if (index != null) {
+            let last = this._values.length - 1;
+            let value = this._values[index];
+            if (index < last) {
+                this._values[index] = this._values[last];
+                this._keys[index] = this._keys[last];
+                this._index[this._keys[index]] = index;
+            }
+            this._values.length = last;
+            this._keys.length = last;
+            delete this._index[key];
+            return value;
+        }
+    }
+    get(key) {
+        if (this._index[key] != null) {
+            return this._values[this._index[key]];
+        }
+    }
+    values() {
+        return this._values;
+    }
+    keys() {
+        return this._keys;
+    }
+};
+
+class TagTableList {
+    constructor() {
+        this.tags = {};
+    }
+    add(tag, key, value) {
+        if (this.tags[tag] == null) {
+            this.tags[tag] = new TableList$1();
+        }
+        this.tags[tag].add(key, value);
+    }
+    remove(tag, key) {
+        if (this.tags[tag] != null) {
+            this.tags[tag].remove(key);
+        }
+    }
+    removeByKey(key) {
+        for (let i in this.tags) {
+            this.tags[i].remove(key);
+        }
+    }
+    get(tag, key) {
+        if (this.tags[tag] == null) {
+            return this.tags[tag].get(key);
+        }
+    }
+    getTagValues(tag) {
+        return this.tags[tag].values();
+    }
+    getKeyValues(key) {
+        let list = [];
+        for (let i in this.tags) {
+            let com = this.get(key, i);
+            if (com != null) {
+                list.push(com);
+            }
+        }
+        return list;
+    }
+}
+
 class BroadcastNode {
     constructor() {
         this.version = "";
@@ -53,7 +134,7 @@ class ValueBroadcastNode {
 
 /***auto-create-index***/
 
-var index$m = /*#__PURE__*/Object.freeze({
+var index$o = /*#__PURE__*/Object.freeze({
     __proto__: null,
     BroadcastNode: BroadcastNode,
     ValueBroadcastNode: ValueBroadcastNode
@@ -73,13 +154,13 @@ class Dict {
     }
     remove(key) {
         let index = this._index[key];
-        if (index) {
+        if (index != null) {
             let last = this._values.length - 1;
             let value = this._values[index];
-            if (index < this._values.length - 1) {
+            if (index < last) {
                 this._values[index] = this._values[last];
                 this._keys[index] = this._keys[last];
-                this._index[last] = index;
+                this._index[this._keys[index]] = index;
             }
             this._values.length = last;
             this._keys.length = last;
@@ -88,7 +169,7 @@ class Dict {
         }
     }
     get(key) {
-        if (this._index[key]) {
+        if (this._index[key] != null) {
             return this._values[this._index[key]];
         }
     }
@@ -312,13 +393,13 @@ class TableList {
     }
     remove(key) {
         let index = this._index[key];
-        if (index) {
+        if (index != null) {
             let last = this._values.length - 1;
             let value = this._values[index];
-            if (index < this._values.length - 1) {
+            if (index < last) {
                 this._values[index] = this._values[last];
                 this._keys[index] = this._keys[last];
-                this._index[last] = index;
+                this._index[this._keys[index]] = index;
             }
             this._values.length = last;
             this._keys.length = last;
@@ -327,7 +408,7 @@ class TableList {
         }
     }
     get(key) {
-        if (this._index[key]) {
+        if (this._index[key] != null) {
             return this._values[this._index[key]];
         }
     }
@@ -459,7 +540,7 @@ class TagDict {
 
 /***auto-create-index***/
 
-var index$l = /*#__PURE__*/Object.freeze({
+var index$n = /*#__PURE__*/Object.freeze({
     __proto__: null,
     Dict: Dict,
     HashList: HashList,
@@ -475,9 +556,48 @@ var index$l = /*#__PURE__*/Object.freeze({
     TagDict: TagDict
 });
 
+let Context$1 = class Context {
+    constructor() {
+        this.tags = {};
+    }
+    addComponent(entity, type, component) {
+        if (this.tags[type] == null) {
+            this.tags[type] = new TableList();
+        }
+        return this.tags[type].add(entity, component);
+    }
+    removeComponent(entity, type) {
+        if (this.tags[type] != null) {
+            return this.tags[type].remove(entity);
+        }
+        return undefined;
+    }
+    getComponent(entity, type) {
+        if (this.tags[type] != null) {
+            return this.tags[type].get(entity);
+        }
+    }
+    getComponents(type) {
+        if (this.tags[type] != null) {
+            return this.tags[type].values();
+        }
+        return [];
+    }
+    getComponentsByEntity(entity) {
+        let list = [];
+        for (let i in this.tags) {
+            let com = this.getComponent(entity, Number(i));
+            if (com != null) {
+                list.push(com);
+            }
+        }
+        return list;
+    }
+};
+
 /***auto-create-index***/
 
-var index$k = /*#__PURE__*/Object.freeze({
+var index$m = /*#__PURE__*/Object.freeze({
     __proto__: null
 });
 
@@ -518,10 +638,956 @@ class Context {
 
 /***auto-create-index***/
 
-var index$j = /*#__PURE__*/Object.freeze({
+var index$l = /*#__PURE__*/Object.freeze({
     __proto__: null,
     Context: Context
 });
+
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+/* global Reflect, Promise, SuppressedError, Symbol */
+
+
+function __awaiter(thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+}
+
+typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
+    var e = new Error(message);
+    return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
+};
+
+class EventHandler {
+    constructor() {
+        this.listeners = [];
+        this.emmiting = false;
+    }
+    on(listener, caller) {
+        this.off(listener, caller);
+        if (this.emmiting) {
+            this.listeners = this.listeners.concat();
+        }
+        this.listeners.push(listener, caller, false);
+    }
+    once(listener, caller) {
+        this.off(listener, caller);
+        if (this.emmiting) {
+            this.listeners = this.listeners.concat();
+        }
+        this.listeners.push(listener, caller, true);
+    }
+    off(listener, caller) {
+        let index = this.get(listener, caller);
+        if (index != -1) {
+            this.listeners.splice(index, 1);
+            return true;
+        }
+        return false;
+    }
+    has(listener, caller) {
+        return this.get(listener, caller) != -1;
+    }
+    get(listener, caller) {
+        let start_index = 0;
+        while (start_index = this.listeners.indexOf(listener, start_index), start_index != -1) {
+            if (start_index != -1 && this.listeners[start_index + 3] == caller) {
+                this.listeners.splice(start_index, 1);
+                return start_index;
+            }
+        }
+        return -1;
+    }
+    emmit(event) {
+        let listeners = this.listeners;
+        let len = listeners.length;
+        for (let i = 0; i < len; i += 3) {
+            listeners[i](listeners[i + 1]);
+            if (listeners[i + 3]) {
+                this.off(listeners[i], listeners[i + 1]);
+            }
+        }
+    }
+}
+
+/**
+ * 资源状态
+ */
+var ResourceState;
+(function (ResourceState) {
+    /** 未加载 */
+    ResourceState[ResourceState["UNLOADED"] = 0] = "UNLOADED";
+    /** 加载中 */
+    ResourceState[ResourceState["LOADING"] = 1] = "LOADING";
+    /** 已加载 */
+    ResourceState[ResourceState["LOADED"] = 2] = "LOADED";
+    /** 加载失败 */
+    ResourceState[ResourceState["ERROR"] = 3] = "ERROR";
+})(ResourceState || (ResourceState = {}));
+/**
+ * 资源管理器
+ * 轻量级的资源管理中间层，负责资源的生命周期管理和基础事件通知
+ */
+class ResourceManager {
+    constructor() {
+        this.resources = new Map();
+        this.loaders = new Map();
+        // 事件处理器
+        this.onResourceLoaded = new EventHandler();
+        this.onResourceError = new EventHandler();
+    }
+    /**
+     * 注册资源加载器
+     * @param loader 资源加载器
+     */
+    registerLoader(loader) {
+        this.loaders.set(loader.getResourceType(), loader);
+    }
+    /**
+     * 加载资源
+     * @param url 资源URL
+     * @param type 资源类型
+     */
+    load(url, type) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // 检查资源是否已存在
+            let resourceInfo = this.resources.get(url);
+            if (resourceInfo) {
+                if (resourceInfo.state === ResourceState.LOADED) {
+                    resourceInfo.refCount++;
+                    return resourceInfo.data;
+                }
+                else if (resourceInfo.state === ResourceState.ERROR) {
+                    throw resourceInfo.error;
+                }
+            }
+            // 获取对应的加载器
+            const loader = this.loaders.get(type);
+            if (!loader) {
+                throw new Error(`未找到类型为 ${type} 的资源加载器`);
+            }
+            // 创建资源信息
+            resourceInfo = {
+                url,
+                type,
+                state: ResourceState.LOADING,
+                refCount: 1
+            };
+            this.resources.set(url, resourceInfo);
+            try {
+                // 加载资源
+                const resource = yield loader.load(url);
+                resourceInfo.state = ResourceState.LOADED;
+                resourceInfo.data = resource;
+                // 触发加载完成事件
+                this.onResourceLoaded.emmit({ url, resource });
+                return resource;
+            }
+            catch (error) {
+                resourceInfo.state = ResourceState.ERROR;
+                resourceInfo.error = error;
+                // 触发错误事件
+                this.onResourceError.emmit({ url, error });
+                throw error;
+            }
+        });
+    }
+    /**
+     * 释放资源
+     * @param url 资源URL
+     */
+    release(url) {
+        const resourceInfo = this.resources.get(url);
+        if (!resourceInfo || resourceInfo.state !== ResourceState.LOADED) {
+            return;
+        }
+        resourceInfo.refCount--;
+        if (resourceInfo.refCount <= 0) {
+            // 调用加载器的释放方法
+            const loader = this.loaders.get(resourceInfo.type);
+            if (loader && loader.release) {
+                loader.release(resourceInfo.data);
+            }
+            this.resources.delete(url);
+        }
+    }
+    /**
+     * 预加载资源
+     * @param urls 资源URL数组
+     * @param type 资源类型
+     */
+    preload(urls, type) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield Promise.all(urls.map(url => this.load(url, type)));
+        });
+    }
+    /**
+     * 获取已加载的资源
+     * @param url 资源URL
+     */
+    get(url) {
+        const resourceInfo = this.resources.get(url);
+        return resourceInfo && resourceInfo.state === ResourceState.LOADED ? resourceInfo.data : undefined;
+    }
+    /**
+     * 检查资源是否已加载
+     * @param url 资源URL
+     */
+    isLoaded(url) {
+        const resourceInfo = this.resources.get(url);
+        return (resourceInfo === null || resourceInfo === void 0 ? void 0 : resourceInfo.state) === ResourceState.LOADED;
+    }
+    /**
+     * 清理所有资源
+     */
+    clear() {
+        for (const [url] of this.resources) {
+            this.release(url);
+        }
+    }
+}
+
+/**
+ * 基础命令管理器，只负责命令的注册和执行
+ */
+class CommandManager {
+    constructor() {
+        this.commands = new Map();
+        this.onCommandRegistered = new EventHandler();
+        this.onCommandExecuted = new EventHandler();
+    }
+    registerCommand(command) {
+        if (this.commands.has(command.id)) {
+            return false;
+        }
+        this.commands.set(command.id, command);
+        this.onCommandRegistered.emmit(command);
+        return true;
+    }
+    unregisterCommand(id) {
+        if (!this.commands.has(id)) {
+            return false;
+        }
+        this.commands.delete(id);
+        return true;
+    }
+    getCommand(id) {
+        return this.commands.get(id);
+    }
+    executeCommand(id, ...args) {
+        const command = this.commands.get(id);
+        if (!command || !command.canExecute()) {
+            return false;
+        }
+        try {
+            const result = command.execute(...args);
+            if (result) {
+                this.onCommandExecuted.emmit(command);
+            }
+            return result;
+        }
+        catch (error) {
+            console.error(`执行命令 ${id} 时发生错误:`, error);
+            return false;
+        }
+    }
+    executeWithResult(id, ...args) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const command = this.commands.get(id);
+            if (!command || !command.canExecute()) {
+                return { success: false };
+            }
+            try {
+                const result = command.execute(...args);
+                if (result) {
+                    this.onCommandExecuted.emmit(command);
+                }
+                return { success: result };
+            }
+            catch (error) {
+                console.error(`执行命令 ${id} 时发生错误:`, error);
+                return { success: false, error };
+            }
+        });
+    }
+}
+
+/**
+ * Manager for handling editor services
+ */
+class ServiceManager {
+    constructor() {
+        this.services = new Map();
+        /**
+         * Event fired when a service is registered
+         */
+        this.onServiceRegistered = new EventHandler();
+        /**
+         * Event fired when a service is started
+         */
+        this.onServiceStarted = new EventHandler();
+        /**
+         * Event fired when a service is stopped
+         */
+        this.onServiceStopped = new EventHandler();
+    }
+    /**
+     * Register a service
+     */
+    registerService(service) {
+        if (this.services.has(service.id)) {
+            return false;
+        }
+        this.services.set(service.id, service);
+        this.onServiceRegistered.emmit(service);
+        return true;
+    }
+    /**
+     * Unregister a service
+     */
+    unregisterService(id) {
+        if (!this.services.has(id)) {
+            return false;
+        }
+        const service = this.services.get(id);
+        if (service.isRunning()) {
+            service.dispose();
+            this.onServiceStopped.emmit(service);
+        }
+        this.services.delete(id);
+        return true;
+    }
+    /**
+     * Get a service by id
+     */
+    getService(id) {
+        return this.services.get(id);
+    }
+    /**
+     * Start a service
+     */
+    startService(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const service = this.services.get(id);
+            if (!service || service.isRunning()) {
+                return false;
+            }
+            const result = yield service.init();
+            if (result) {
+                this.onServiceStarted.emmit(service);
+            }
+            return result;
+        });
+    }
+    /**
+     * Stop a service
+     */
+    stopService(id) {
+        const service = this.services.get(id);
+        if (!service || !service.isRunning()) {
+            return false;
+        }
+        service.dispose();
+        this.onServiceStopped.emmit(service);
+        return true;
+    }
+    /**
+     * Start all services
+     */
+    startAllServices() {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (const service of this.services.values()) {
+                if (!service.isRunning()) {
+                    const result = yield service.init();
+                    if (result) {
+                        this.onServiceStarted.emmit(service);
+                    }
+                }
+            }
+        });
+    }
+    /**
+     * Stop all services
+     */
+    stopAllServices() {
+        for (const service of this.services.values()) {
+            if (service.isRunning()) {
+                service.dispose();
+                this.onServiceStopped.emmit(service);
+            }
+        }
+    }
+}
+
+/**
+ * Manager for handling editor events
+ */
+class EventManager {
+    constructor() {
+        this.eventHandlers = new Map();
+    }
+    /**
+     * Register an event listener
+     */
+    on(eventType, listener, caller) {
+        let handler = this.getOrCreateHandler(eventType);
+        handler.on(listener, caller);
+    }
+    /**
+     * Register a one-time event listener
+     */
+    once(eventType, listener, caller) {
+        let handler = this.getOrCreateHandler(eventType);
+        handler.once(listener, caller);
+    }
+    /**
+     * Remove an event listener
+     */
+    off(eventType, listener, caller) {
+        const handler = this.eventHandlers.get(eventType);
+        if (!handler) {
+            return false;
+        }
+        return handler.off(listener, caller);
+    }
+    /**
+     * Check if an event listener exists
+     */
+    hasListener(eventType, listener, caller) {
+        const handler = this.eventHandlers.get(eventType);
+        if (!handler) {
+            return false;
+        }
+        return handler.has(listener, caller);
+    }
+    /**
+     * Emit an event
+     */
+    emit(event) {
+        const handler = this.eventHandlers.get(event.type);
+        if (!handler) {
+            return true; // No listeners, event not handled
+        }
+        handler.emmit(event);
+        return !event.canceled;
+    }
+    /**
+     * Clear all event listeners
+     */
+    clearListeners(eventType) {
+        if (eventType) {
+            this.eventHandlers.delete(eventType);
+        }
+        else {
+            this.eventHandlers.clear();
+        }
+    }
+    /**
+     * Get or create an event handler for a specific event type
+     */
+    getOrCreateHandler(eventType) {
+        let handler = this.eventHandlers.get(eventType);
+        if (!handler) {
+            handler = new EventHandler();
+            this.eventHandlers.set(eventType, handler);
+        }
+        return handler;
+    }
+}
+
+/**
+ * Manager for handling editor documents
+ */
+class DocumentManager {
+    constructor() {
+        this.documents = new Map();
+        this.activeDocument = null;
+        /**
+         * Event fired when a document is opened
+         */
+        this.onDocumentOpened = new EventHandler();
+        /**
+         * Event fired when a document is closed
+         */
+        this.onDocumentClosed = new EventHandler();
+        /**
+         * Event fired when a document is saved
+         */
+        this.onDocumentSaved = new EventHandler();
+        /**
+         * Event fired when the active document changes
+         */
+        this.onActiveDocumentChanged = new EventHandler();
+    }
+    /**
+     * Get a document by id
+     */
+    getDocument(id) {
+        return this.documents.get(id);
+    }
+    /**
+     * Get all documents
+     */
+    getAllDocuments() {
+        return Array.from(this.documents.values());
+    }
+    /**
+     * Get the active document
+     */
+    getActiveDocument() {
+        return this.activeDocument;
+    }
+    /**
+     * Set the active document
+     */
+    setActiveDocument(id) {
+        if (id === null) {
+            this.activeDocument;
+            this.activeDocument = null;
+            this.onActiveDocumentChanged.emmit(null);
+            return true;
+        }
+        const document = this.documents.get(id);
+        if (!document) {
+            return false;
+        }
+        if (this.activeDocument !== document) {
+            this.activeDocument = document;
+            this.onActiveDocumentChanged.emmit(document);
+        }
+        return true;
+    }
+    /**
+     * Create and open a document for a resource
+     */
+    createDocument(resource, editor) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // This is a simplified implementation
+            // In a real implementation, you would create the appropriate document type based on the resource
+            const document = {
+                id: `doc-${resource.id}`,
+                resource,
+                editor,
+                open: () => __awaiter(this, void 0, void 0, function* () {
+                    yield resource.load();
+                    editor.setContent(resource);
+                    return true;
+                }),
+                close: () => {
+                    editor.dispose();
+                },
+                save: () => __awaiter(this, void 0, void 0, function* () {
+                    // In a real implementation, you would save the content back to the resource
+                    return true;
+                }),
+                isDirty: () => editor.isDirty()
+            };
+            this.documents.set(document.id, document);
+            const result = yield document.open();
+            if (result) {
+                this.onDocumentOpened.emmit(document);
+                this.setActiveDocument(document.id);
+            }
+            return result ? document : null;
+        });
+    }
+    /**
+     * Close a document
+     */
+    closeDocument(id) {
+        const document = this.documents.get(id);
+        if (!document) {
+            return false;
+        }
+        document.close();
+        this.documents.delete(id);
+        if (this.activeDocument === document) {
+            this.activeDocument = null;
+            this.onActiveDocumentChanged.emmit(null);
+        }
+        this.onDocumentClosed.emmit(document);
+        return true;
+    }
+    /**
+     * Save a document
+     */
+    saveDocument(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const document = this.documents.get(id);
+            if (!document) {
+                return false;
+            }
+            const result = yield document.save();
+            if (result) {
+                this.onDocumentSaved.emmit(document);
+            }
+            return result;
+        });
+    }
+    /**
+     * Close all documents
+     */
+    closeAllDocuments() {
+        for (const document of this.documents.values()) {
+            document.close();
+            this.onDocumentClosed.emmit(document);
+        }
+        this.documents.clear();
+        this.activeDocument = null;
+        this.onActiveDocumentChanged.emmit(null);
+    }
+}
+
+/**
+ * Manager for handling editor triggers
+ */
+class TriggerManager {
+    constructor() {
+        this.triggers = new Map();
+        this.triggersByType = new Map();
+        /**
+         * Event fired when a trigger is registered
+         */
+        this.onTriggerRegistered = new EventHandler();
+        /**
+         * Event fired when a trigger is unregistered
+         */
+        this.onTriggerUnregistered = new EventHandler();
+        /**
+         * Event fired when a trigger is executed
+         */
+        this.onTriggerExecuted = new EventHandler();
+    }
+    /**
+     * Register a trigger
+     */
+    registerTrigger(trigger) {
+        if (this.triggers.has(trigger.id)) {
+            return false;
+        }
+        this.triggers.set(trigger.id, trigger);
+        // Add to type map
+        let typeList = this.triggersByType.get(trigger.type);
+        if (!typeList) {
+            typeList = [];
+            this.triggersByType.set(trigger.type, typeList);
+        }
+        // Insert based on priority
+        const priority = trigger.priority || 0;
+        let inserted = false;
+        for (let i = 0; i < typeList.length; i++) {
+            const existingPriority = typeList[i].priority || 0;
+            if (priority > existingPriority) {
+                typeList.splice(i, 0, trigger);
+                inserted = true;
+                break;
+            }
+        }
+        if (!inserted) {
+            typeList.push(trigger);
+        }
+        this.onTriggerRegistered.emmit(trigger);
+        return true;
+    }
+    /**
+     * Unregister a trigger
+     */
+    unregisterTrigger(id) {
+        const trigger = this.triggers.get(id);
+        if (!trigger) {
+            return false;
+        }
+        this.triggers.delete(id);
+        // Remove from type map
+        const typeList = this.triggersByType.get(trigger.type);
+        if (typeList) {
+            const index = typeList.findIndex(t => t.id === id);
+            if (index !== -1) {
+                typeList.splice(index, 1);
+            }
+            if (typeList.length === 0) {
+                this.triggersByType.delete(trigger.type);
+            }
+        }
+        this.onTriggerUnregistered.emmit(trigger);
+        return true;
+    }
+    /**
+     * Get a trigger by id
+     */
+    getTrigger(id) {
+        return this.triggers.get(id);
+    }
+    /**
+     * Get triggers by type
+     */
+    getTriggersByType(type) {
+        return this.triggersByType.get(type) || [];
+    }
+    /**
+     * Enable a trigger
+     */
+    enableTrigger(id) {
+        const trigger = this.triggers.get(id);
+        if (!trigger) {
+            return false;
+        }
+        trigger.enabled = true;
+        return true;
+    }
+    /**
+     * Disable a trigger
+     */
+    disableTrigger(id) {
+        const trigger = this.triggers.get(id);
+        if (!trigger) {
+            return false;
+        }
+        trigger.enabled = false;
+        return true;
+    }
+    /**
+     * Execute triggers of a specific type with the given context
+     */
+    executeTriggers(type, context) {
+        const triggers = this.triggersByType.get(type);
+        if (!triggers) {
+            return;
+        }
+        for (const trigger of triggers) {
+            if (trigger.enabled && trigger.condition(context)) {
+                trigger.action(context);
+                this.onTriggerExecuted.emmit(trigger);
+            }
+        }
+    }
+    /**
+     * Clear all triggers
+     */
+    clearTriggers() {
+        this.triggers.clear();
+        this.triggersByType.clear();
+    }
+}
+
+/**
+ * Manager for handling editor plugins
+ */
+class PluginManager {
+    constructor() {
+        this.plugins = new Map();
+        /**
+         * Event fired when a plugin is registered
+         */
+        this.onPluginRegistered = new EventHandler();
+        /**
+         * Event fired when a plugin is unregistered
+         */
+        this.onPluginUnregistered = new EventHandler();
+        /**
+         * Event fired when a plugin is enabled
+         */
+        this.onPluginEnabled = new EventHandler();
+        /**
+         * Event fired when a plugin is disabled
+         */
+        this.onPluginDisabled = new EventHandler();
+    }
+    /**
+     * Register a plugin
+     */
+    registerPlugin(plugin) {
+        if (this.plugins.has(plugin.id)) {
+            return false;
+        }
+        this.plugins.set(plugin.id, plugin);
+        this.onPluginRegistered.emmit(plugin);
+        return true;
+    }
+    /**
+     * Unregister a plugin
+     */
+    unregisterPlugin(id) {
+        const plugin = this.plugins.get(id);
+        if (!plugin) {
+            return false;
+        }
+        if (plugin.isEnabled()) {
+            plugin.disable();
+            this.onPluginDisabled.emmit(plugin);
+        }
+        plugin.dispose();
+        this.plugins.delete(id);
+        this.onPluginUnregistered.emmit(plugin);
+        return true;
+    }
+    /**
+     * Get a plugin by id
+     */
+    getPlugin(id) {
+        return this.plugins.get(id);
+    }
+    /**
+     * Get all plugins
+     */
+    getAllPlugins() {
+        return Array.from(this.plugins.values());
+    }
+    /**
+     * Enable a plugin
+     */
+    enablePlugin(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const plugin = this.plugins.get(id);
+            if (!plugin || plugin.isEnabled()) {
+                return false;
+            }
+            const result = yield plugin.enable();
+            if (result) {
+                this.onPluginEnabled.emmit(plugin);
+            }
+            return result;
+        });
+    }
+    /**
+     * Disable a plugin
+     */
+    disablePlugin(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const plugin = this.plugins.get(id);
+            if (!plugin || !plugin.isEnabled()) {
+                return false;
+            }
+            const result = yield plugin.disable();
+            if (result) {
+                this.onPluginDisabled.emmit(plugin);
+            }
+            return result;
+        });
+    }
+    /**
+     * Initialize all plugins
+     */
+    initializePlugins() {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (const plugin of this.plugins.values()) {
+                yield plugin.init();
+            }
+        });
+    }
+    /**
+     * Dispose all plugins
+     */
+    disposePlugins() {
+        for (const plugin of this.plugins.values()) {
+            if (plugin.isEnabled()) {
+                plugin.disable();
+                this.onPluginDisabled.emmit(plugin);
+            }
+            plugin.dispose();
+        }
+    }
+}
+
+/**
+ * Editor module for handling editing functionality
+ */
+class ViewService {
+    constructor() {
+        this.id = 'view';
+        this.name = 'View Service';
+        this.running = false;
+    }
+    init() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.running = true;
+            return true;
+        });
+    }
+    dispose() {
+        this.running = false;
+    }
+    isRunning() {
+        return this.running;
+    }
+}
+/**
+ * Main Editor class that integrates all manager components
+ */
+class Editor {
+    constructor() {
+        // Initialize all managers
+        this.resourceManager = new ResourceManager();
+        this.commandManager = new CommandManager();
+        this.serviceManager = new ServiceManager();
+        this.eventManager = new EventManager();
+        this.documentManager = new DocumentManager();
+        this.triggerManager = new TriggerManager();
+        this.pluginManager = new PluginManager();
+    }
+    /**
+     * Initialize the editor
+     */
+    init() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Initialize services
+            const viewService = new ViewService();
+            this.serviceManager.registerService(viewService);
+            yield this.serviceManager.startService(viewService.id);
+            // Initialize plugins
+            yield this.pluginManager.initializePlugins();
+        });
+    }
+    /**
+     * Dispose editor resources
+     */
+    dispose() {
+        // Close all documents
+        this.documentManager.closeAllDocuments();
+        // Dispose plugins
+        this.pluginManager.disposePlugins();
+        // Stop all services
+        this.serviceManager.stopAllServices();
+    }
+}
+
+var index$k = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    Editor: Editor,
+    ViewService: ViewService
+});
+
+let World$1 = class World {
+    constructor() {
+    }
+    addUnit(unit) {
+        this.context.addComponent(0, unit.id, unit);
+    }
+    removeUnit(unit) {
+    }
+    getUnit(id) {
+        return this.context.getComponent(0, id);
+    }
+};
+class Unit {
+}
 
 class Action {
     constructor() {
@@ -728,61 +1794,9 @@ class EventEmitter {
     }
 }
 
-class EventHandler {
-    constructor() {
-        this.listeners = [];
-        this.emmiting = false;
-    }
-    on(listener, caller) {
-        this.off(listener, caller);
-        if (this.emmiting) {
-            this.listeners = this.listeners.concat();
-        }
-        this.listeners.push(listener, caller, false);
-    }
-    once(listener, caller) {
-        this.off(listener, caller);
-        if (this.emmiting) {
-            this.listeners = this.listeners.concat();
-        }
-        this.listeners.push(listener, caller, true);
-    }
-    off(listener, caller) {
-        let index = this.get(listener, caller);
-        if (index != -1) {
-            this.listeners.splice(index, 1);
-            return true;
-        }
-        return false;
-    }
-    has(listener, caller) {
-        return this.get(listener, caller) != -1;
-    }
-    get(listener, caller) {
-        let start_index = 0;
-        while (start_index = this.listeners.indexOf(listener, start_index), start_index != -1) {
-            if (start_index != -1 && this.listeners[start_index + 3] == caller) {
-                this.listeners.splice(start_index, 1);
-                return start_index;
-            }
-        }
-        return -1;
-    }
-    emmit(event) {
-        let listeners = this.listeners;
-        let len = listeners.length;
-        for (let i = 0; i < len; i += 3) {
-            listeners[i](listeners[i + 1]);
-            if (listeners[i + 3]) {
-                this.off(listeners[i], listeners[i + 1]);
-            }
-        }
-    }
-}
-
 /***auto-create-index***/
 
-var index$i = /*#__PURE__*/Object.freeze({
+var index$j = /*#__PURE__*/Object.freeze({
     __proto__: null,
     Action: Action,
     Broadcast: Broadcast,
@@ -809,7 +1823,7 @@ class Flow {
 
 /***auto-create-index***/
 
-var index$h = /*#__PURE__*/Object.freeze({
+var index$i = /*#__PURE__*/Object.freeze({
     __proto__: null,
     Flow: Flow
 });
@@ -818,6 +1832,12 @@ class Lobby {
 }
 class Room {
 }
+
+var index$h = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    Lobby: Lobby,
+    Room: Room
+});
 
 class MapData {
     constructor() {
@@ -1036,38 +2056,6 @@ class Queue {
     }
 }
 
-/******************************************************************************
-Copyright (c) Microsoft Corporation.
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-***************************************************************************** */
-/* global Reflect, Promise, SuppressedError, Symbol */
-
-
-function __awaiter(thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-}
-
-typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
-    var e = new Error(message);
-    return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
-};
-
 class TaskQueue {
     constructor(executor) {
         this.maxTask = 2;
@@ -1259,6 +2247,16 @@ const Word = {
     }
 };
 
+var TOKEN_TYPE;
+(function (TOKEN_TYPE) {
+    TOKEN_TYPE[TOKEN_TYPE["NUMBER"] = 0] = "NUMBER";
+    TOKEN_TYPE[TOKEN_TYPE["STRING"] = 1] = "STRING";
+    TOKEN_TYPE[TOKEN_TYPE["KEY"] = 2] = "KEY";
+    TOKEN_TYPE[TOKEN_TYPE["LP"] = 3] = "LP";
+    TOKEN_TYPE[TOKEN_TYPE["RP"] = 4] = "RP";
+    TOKEN_TYPE[TOKEN_TYPE["COM"] = 5] = "COM";
+    TOKEN_TYPE[TOKEN_TYPE["DEFAULT"] = 6] = "DEFAULT";
+})(TOKEN_TYPE || (TOKEN_TYPE = {}));
 class ScriptScope {
     constructor(parent) {
         this.values = {};
@@ -1276,6 +2274,7 @@ class ScriptScope {
 }
 class ScriptContext {
     constructor(parent) {
+        this.scope = new ScriptScope();
         this.parent = parent;
     }
     down() {
@@ -1285,35 +2284,35 @@ class ScriptContext {
         this.scope = this.scope.parent;
     }
     get_value(key) {
-        return this.scope.get_value(key);
+        return this.scope.get_value(key) || this.parent.get_value(key);
     }
     set_value(key, value) {
         this.scope.set_value(key, value);
     }
 }
 const JassRuntimeProcessor = {
-    [TOKEN_TYPE.DEFAULT](token, context) {
+    [TOKEN_TYPE.DEFAULT]: function (token, context) {
+        context.scope.stack.push(token.value);
     },
-    [TOKEN_TYPE.COM](token, context) {
-        //context.silent++
+    [TOKEN_TYPE.LP]: function (token, context) {
+        context.down();
     },
-    [TOKEN_TYPE.STRING](token, context) {
-        //context.set_value("")
+    [TOKEN_TYPE.RP]: function (token, context) {
+        let stack = context.scope.stack;
+        context.up();
+        let mothed_name = context.scope.stack.pop();
+        let mothed = context.get_value(mothed_name);
+        mothed.apply(null, stack);
     },
-    [TOKEN_TYPE.NUMBER](token, context) {
-        //context.set_value(token.value)
+    [TOKEN_TYPE.COM]: function (token, context) {
+    },
+    [TOKEN_TYPE.STRING]: function (token, context) {
+        context.scope.stack.push(token.value);
+    },
+    [TOKEN_TYPE.KEY]: function (token, context) {
+        context.scope.stack.push(token.value);
     }
 };
-var TOKEN_TYPE;
-(function (TOKEN_TYPE) {
-    TOKEN_TYPE[TOKEN_TYPE["NUMBER"] = 0] = "NUMBER";
-    TOKEN_TYPE[TOKEN_TYPE["STRING"] = 1] = "STRING";
-    TOKEN_TYPE[TOKEN_TYPE["KEY"] = 2] = "KEY";
-    TOKEN_TYPE[TOKEN_TYPE["LP"] = 3] = "LP";
-    TOKEN_TYPE[TOKEN_TYPE["RP"] = 4] = "RP";
-    TOKEN_TYPE[TOKEN_TYPE["COM"] = 5] = "COM";
-    TOKEN_TYPE[TOKEN_TYPE["DEFAULT"] = 6] = "DEFAULT";
-})(TOKEN_TYPE || (TOKEN_TYPE = {}));
 const BUILTIN_TOKEN_READER = {
     TOKEN_COM: {
         type: TOKEN_TYPE.COM,
@@ -1335,6 +2334,14 @@ const BUILTIN_TOKEN_READER = {
         start: "01234556789",
         convert: Number,
         check: (char) => char.charCodeAt(0) >= 45 && char.charCodeAt(0) <= 57,
+        single: true
+    },
+    TOKEN_STRING_1: {
+        type: TOKEN_TYPE.STRING,
+        start: "'",
+        convert: String,
+        check: (char) => char != "'",
+        mode: 1,
         single: true
     },
     TOKEN_KEY: {
@@ -1363,8 +2370,18 @@ class ScriptRender {
                 if (this.last_position == position) {
                     position = position + 1;
                 }
+                let start = this.last_position;
                 let end = position;
-                let value = this.content.substring(this.last_position, end);
+                if (this.reader.mode == 1) {
+                    if (position - this.last_position <= 1) {
+                        this.last_position++;
+                        continue;
+                    }
+                    else {
+                        position++;
+                    }
+                }
+                let value = this.content.substring(start, end);
                 if (this.reader.convert) {
                     value = this.reader.convert(value);
                 }
@@ -1419,34 +2436,29 @@ class ScriptRuntime {
         this.processors = processors;
     }
     input(token, context) {
-        this.processors[token.type] || this.processors[TOKEN_TYPE.DEFAULT](token, context);
+        (this.processors[token.type] || this.processors[TOKEN_TYPE.DEFAULT])(token, context);
     }
 }
 class JassScriptEngine {
     constructor(global) {
         this.serializer = new ScriptSerializer([
+            BUILTIN_TOKEN_READER.TOKEN_KEY,
             BUILTIN_TOKEN_READER.TOKEN_COM,
             BUILTIN_TOKEN_READER.TOKEN_LP,
             BUILTIN_TOKEN_READER.TOKEN_RP,
-            BUILTIN_TOKEN_READER.TOKEN_NUMBER
+            BUILTIN_TOKEN_READER.TOKEN_NUMBER,
+            BUILTIN_TOKEN_READER.TOKEN_STRING_1
         ]);
-        this.runtime = new ScriptRuntime([
-            JassRuntimeProcessor[TOKEN_TYPE.DEFAULT],
-            JassRuntimeProcessor[TOKEN_TYPE.COM],
-            JassRuntimeProcessor[TOKEN_TYPE.LP],
-            JassRuntimeProcessor[TOKEN_TYPE.RP],
-            JassRuntimeProcessor[TOKEN_TYPE.NUMBER],
-            JassRuntimeProcessor[TOKEN_TYPE.STRING],
-        ]);
-        let _g = new ScriptContext(this.context);
-        _g.scope = global;
+        this.runtime = new ScriptRuntime(JassRuntimeProcessor);
+        this.global = new ScriptContext();
         this.global.set_value("print", (...args) => console.log.apply(null, args));
     }
     eval(script) {
         let stream = this.serializer.createReader(script);
         let token = null;
-        let context = new ScriptContext(this.context);
+        let context = new ScriptContext(this.global);
         while (token = stream.read()) {
+            console.log(token);
             this.runtime.input(token, context);
         }
     }
@@ -1465,6 +2477,8 @@ class JassScriptEngine {
 //? compile 编译成function
 //? scope隔离
 //? 暂停继续
+var engine = new JassScriptEngine();
+engine.eval("print('test')");
 
 var ReliBuildin = {
     "if": function (a) { return Boolean(a); },
@@ -2143,16 +3157,6 @@ var index$2 = /*#__PURE__*/Object.freeze({
     __proto__: null
 });
 
-class WindowLoader {
-}
-
-/***auto-create-index***/
-
-var index$1 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    WindowLoader: WindowLoader
-});
-
 class World {
     constructor() {
         this.indexerMap = new SingletonMap();
@@ -2204,10 +3208,20 @@ class ComponentIndexer {
     }
 }
 
-var index = /*#__PURE__*/Object.freeze({
+var index$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     ComponentIndexer: ComponentIndexer,
     World: World
 });
 
-export { FrameStack, Lobby, Model$1 as Model, Room, SyncFrame, SyncManager, index$m as broadcast, index$l as collection, index$k as definition, index$j as ecs, index$i as event, index$h as flow, index$g as map, index$f as math, index$e as mvc, index$d as queue, index$c as reducer, index$b as scene, index$a as scripts, index$9 as services, index$8 as sheet, index$7 as status, index$6 as system, index$5 as table, index$4 as task, index$3 as trigger, index$2 as view, index$1 as window, index as world };
+class WindowLoader {
+}
+
+/***auto-create-index***/
+
+var index = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    WindowLoader: WindowLoader
+});
+
+export { Context$1 as Context, FrameStack, Model$1 as Model, SyncFrame, SyncManager, TableList$1 as TableList, TagTableList, Unit, World$1 as World, index$o as broadcast, index$n as collection, index$m as definition, index$l as ecs, index$k as editor, index$j as event, index$i as flow, index$h as lobby, index$g as map, index$f as math, index$e as mvc, index$d as queue, index$c as reducer, index$b as scene, index$a as scripts, index$9 as services, index$8 as sheet, index$7 as status, index$6 as system, index$5 as table, index$4 as task, index$3 as trigger, index$2 as view, index as window, index$1 as world };

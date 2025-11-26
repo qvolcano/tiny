@@ -1,4 +1,4 @@
-import { ScriptContext } from "../ScriptContext";
+import { IScriptContext } from "../ScriptContext";
 import {  ScriptEngine } from "../ScriptEngine";
 const BuildIn:any = {
     "+": function (...args:any) { return args.reduce((c:any, v:any) => Number(c) + Number(v)) },
@@ -8,7 +8,7 @@ const BuildIn:any = {
 }
 
 export class TrickScriptEngine extends ScriptEngine {
-    eval(script: string, params: any[], context: any&ScriptContext): any {
+    eval(script: string, params: any[], context: any&IScriptContext): any {
         let tokens = this.loadTokens(script);
         context = context || BuildIn;
         function process(tokens: string[]): any {
@@ -34,7 +34,7 @@ export class TrickScriptEngine extends ScriptEngine {
         }
     }
 
-    compile(script: string, context: ScriptContext): Function|undefined {
+    compile(script: string, context: IScriptContext): Function|undefined {
         let tokens = this.loadTokens(script);
         return this._compile(tokens, context);
     }

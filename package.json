@@ -26,7 +26,7 @@
     "@rollup/plugin-typescript": "^11.1.2",
     "@rollup/stream": "^3.0.1",
     "glob": "^10.3.10",
-    "gulp": "^4.0.0",
+    "gulp": "^4.0.2",
     "gulp-clean": "^0.4.0",
     "gulp-ts-index": "^1.1.1",
     "rollup": "^3.29.4",
@@ -40,17 +40,35 @@
   ],
   "typesVersions": {
     "*": {
+      "TableList": [
+        "dist\\TableList\\index.d.ts"
+      ],
+      "TagTableList": [
+        "dist\\TagTableList\\index.d.ts"
+      ],
+      "Type": [
+        "dist\\Type\\index.d.ts"
+      ],
       "broadcast": [
         "dist\\broadcast\\index.d.ts"
       ],
       "collection": [
         "dist\\collection\\index.d.ts"
       ],
+      "cs": [
+        "dist\\cs\\index.d.ts"
+      ],
       "definition": [
         "dist\\definition\\index.d.ts"
       ],
       "ecs": [
         "dist\\ecs\\index.d.ts"
+      ],
+      "editor": [
+        "dist\\editor\\index.d.ts"
+      ],
+      "entity": [
+        "dist\\entity\\index.d.ts"
       ],
       "event": [
         "dist\\event\\index.d.ts"
@@ -115,11 +133,11 @@
       "view": [
         "dist\\view\\index.d.ts"
       ],
-      "window": [
-        "dist\\window\\index.d.ts"
-      ],
       "world": [
         "dist\\world\\index.d.ts"
+      ],
+      "window": [
+        "dist\\window\\index.d.ts"
       ],
       ".": [
         "dist/index.d.ts"
@@ -127,6 +145,18 @@
     }
   },
   "exports": {
+    "./TableList": {
+      "require": "./dist/TableList\\index.cjs.js",
+      "import": "./dist/TableList\\index.js"
+    },
+    "./TagTableList": {
+      "require": "./dist/TagTableList\\index.cjs.js",
+      "import": "./dist/TagTableList\\index.js"
+    },
+    "./Type": {
+      "require": "./dist/Type\\index.cjs.js",
+      "import": "./dist/Type\\index.js"
+    },
     "./broadcast": {
       "require": "./dist/broadcast\\index.cjs.js",
       "import": "./dist/broadcast\\index.js"
@@ -135,6 +165,10 @@
       "require": "./dist/collection\\index.cjs.js",
       "import": "./dist/collection\\index.js"
     },
+    "./cs": {
+      "require": "./dist/cs\\index.cjs.js",
+      "import": "./dist/cs\\index.js"
+    },
     "./definition": {
       "require": "./dist/definition\\index.cjs.js",
       "import": "./dist/definition\\index.js"
@@ -142,6 +176,14 @@
     "./ecs": {
       "require": "./dist/ecs\\index.cjs.js",
       "import": "./dist/ecs\\index.js"
+    },
+    "./editor": {
+      "require": "./dist/editor\\index.cjs.js",
+      "import": "./dist/editor\\index.js"
+    },
+    "./entity": {
+      "require": "./dist/entity\\index.cjs.js",
+      "import": "./dist/entity\\index.js"
     },
     "./event": {
       "require": "./dist/event\\index.cjs.js",
@@ -227,13 +269,13 @@
       "require": "./dist/view\\index.cjs.js",
       "import": "./dist/view\\index.js"
     },
-    "./window": {
-      "require": "./dist/window\\index.cjs.js",
-      "import": "./dist/window\\index.js"
-    },
     "./world": {
       "require": "./dist/world\\index.cjs.js",
       "import": "./dist/world\\index.js"
+    },
+    "./window": {
+      "require": "./dist/window\\index.cjs.js",
+      "import": "./dist/window\\index.js"
     },
     ".": {
       "require": "./dist/index.cjs.js",

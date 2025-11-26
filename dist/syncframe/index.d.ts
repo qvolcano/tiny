@@ -1,13 +1,15 @@
-export declare class FrameStack {
+declare class FrameStack {
     private frames;
     pushFrame(frame: FrameData): void;
     getFrame(index: number): FrameData;
 }
-export type FrameData = {
+type FrameData = {
     time: number;
     data: any;
 };
-export declare class SyncFrame {
+declare class SyncFrame {
 }
-export declare class SyncManager {
+declare class SyncManager {
 }
+
+export { FrameData, FrameStack, SyncFrame, SyncManager };

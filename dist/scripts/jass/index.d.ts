@@ -1,3 +1,12 @@
+export declare enum TOKEN_TYPE {
+    NUMBER = 0,
+    STRING = 1,
+    KEY = 2,
+    LP = 3,
+    RP = 4,
+    COM = 5,
+    DEFAULT = 6
+}
 export declare class ScriptScope {
     values: {};
     parent: ScriptScope;
@@ -10,30 +19,42 @@ export declare class ScriptScope {
 export declare class ScriptContext {
     parent: ScriptContext;
     scope: ScriptScope;
-    constructor(parent: ScriptContext);
+    constructor(parent?: ScriptContext);
     down(): void;
     up(): void;
     get_value(key: string): any;
     set_value(key: string, value: any): void;
 }
 export declare const JassRuntimeProcessor: {
-    6(token: any, context: any): void;
-    5(token: any, context: any): void;
-    1(token: any, context: any): void;
-    0(token: any, context: any): void;
+    6: (token: {
+        value: any;
+        type: TOKEN_TYPE;
+    }, context: ScriptContext) => void;
+    3: (token: {
+        value: any;
+        type: TOKEN_TYPE;
+    }, context: ScriptContext) => void;
+    4: (token: {
+        value: any;
+        type: TOKEN_TYPE;
+    }, context: ScriptContext) => void;
+    5: (token: {
+        value: any;
+        type: TOKEN_TYPE;
+    }, context: ScriptContext) => void;
+    1: (token: {
+        value: any;
+        type: TOKEN_TYPE;
+    }, context: ScriptContext) => void;
+    2: (token: {
+        value: any;
+        type: TOKEN_TYPE;
+    }, context: ScriptContext) => void;
 };
-export declare enum TOKEN_TYPE {
-    NUMBER = 0,
-    STRING = 1,
-    KEY = 2,
-    LP = 3,
-    RP = 4,
-    COM = 5,
-    DEFAULT = 6
-}
 export type TokenReader = {
     type: TOKEN_TYPE;
     check: (char: string) => boolean;
+    mode?: number;
     start: string;
     convert?: Function;
 };
@@ -58,6 +79,14 @@ export declare const BUILTIN_TOKEN_READER: {
         start: string;
         convert: NumberConstructor;
         check: (char: string) => boolean;
+        single: boolean;
+    };
+    TOKEN_STRING_1: {
+        type: TOKEN_TYPE;
+        start: string;
+        convert: StringConstructor;
+        check: (char: string) => boolean;
+        mode: number;
         single: boolean;
     };
     TOKEN_KEY: {
@@ -93,7 +122,7 @@ export declare class ScriptRuntime {
     input(token: any, context: any): void;
 }
 export declare class JassScriptEngine {
-    global: ScriptScope;
+    global: ScriptContext;
     serializer: ScriptSerializer;
     runtime: ScriptRuntime;
     context: ScriptContext;
