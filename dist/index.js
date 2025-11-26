@@ -1996,20 +1996,6 @@ let Model$1 = class Model {
 // export class ViewSystem extends System {
 // }
 
-class Model {
-}
-
-class View {
-}
-
-/***auto-create-index***/
-
-var index$e = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    Model: Model,
-    View: View
-});
-
 class Queue {
     constructor(executor, autoStart = true) {
         this.executor = executor;
@@ -2118,10 +2104,30 @@ class TaskQueue {
 
 /***auto-create-index***/
 
-var index$d = /*#__PURE__*/Object.freeze({
+var index$e = /*#__PURE__*/Object.freeze({
     __proto__: null,
     Queue: Queue,
     TaskQueue: TaskQueue
+});
+
+class Model {
+}
+
+class View {
+}
+
+/***auto-create-index***/
+
+var index$d = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    Model: Model,
+    View: View
+});
+
+/***auto-create-index***/
+
+var index$c = /*#__PURE__*/Object.freeze({
+    __proto__: null
 });
 
 class Reducer {
@@ -2136,16 +2142,10 @@ class ReduceItem {
 
 /***auto-create-index***/
 
-var index$c = /*#__PURE__*/Object.freeze({
+var index$b = /*#__PURE__*/Object.freeze({
     __proto__: null,
     ReduceItem: ReduceItem,
     Reducer: Reducer
-});
-
-/***auto-create-index***/
-
-var index$b = /*#__PURE__*/Object.freeze({
-    __proto__: null
 });
 
 class ScriptEngine {
@@ -3157,6 +3157,16 @@ var index$2 = /*#__PURE__*/Object.freeze({
     __proto__: null
 });
 
+class WindowLoader {
+}
+
+/***auto-create-index***/
+
+var index$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    WindowLoader: WindowLoader
+});
+
 class World {
     constructor() {
         this.indexerMap = new SingletonMap();
@@ -3208,20 +3218,10 @@ class ComponentIndexer {
     }
 }
 
-var index$1 = /*#__PURE__*/Object.freeze({
+var index = /*#__PURE__*/Object.freeze({
     __proto__: null,
     ComponentIndexer: ComponentIndexer,
     World: World
 });
 
-class WindowLoader {
-}
-
-/***auto-create-index***/
-
-var index = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    WindowLoader: WindowLoader
-});
-
-export { Context$1 as Context, FrameStack, Model$1 as Model, SyncFrame, SyncManager, TableList$1 as TableList, TagTableList, Unit, World$1 as World, index$o as broadcast, index$n as collection, index$m as definition, index$l as ecs, index$k as editor, index$j as event, index$i as flow, index$h as lobby, index$g as map, index$f as math, index$e as mvc, index$d as queue, index$c as reducer, index$b as scene, index$a as scripts, index$9 as services, index$8 as sheet, index$7 as status, index$6 as system, index$5 as table, index$4 as task, index$3 as trigger, index$2 as view, index as window, index$1 as world };
+export { Context$1 as Context, FrameStack, Model$1 as Model, SyncFrame, SyncManager, TableList$1 as TableList, TagTableList, Unit, World$1 as World, index$o as broadcast, index$n as collection, index$m as definition, index$l as ecs, index$k as editor, index$j as event, index$i as flow, index$h as lobby, index$g as map, index$f as math, index$d as mvc, index$e as queue, index$b as reducer, index$c as scene, index$a as scripts, index$9 as services, index$8 as sheet, index$7 as status, index$6 as system, index$5 as table, index$4 as task, index$3 as trigger, index$2 as view, index$1 as window, index as world };

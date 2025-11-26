@@ -1998,20 +1998,6 @@ let Model$1 = class Model {
 // export class ViewSystem extends System {
 // }
 
-class Model {
-}
-
-class View {
-}
-
-/***auto-create-index***/
-
-var index$e = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    Model: Model,
-    View: View
-});
-
 class Queue {
     constructor(executor, autoStart = true) {
         this.executor = executor;
@@ -2120,10 +2106,30 @@ class TaskQueue {
 
 /***auto-create-index***/
 
-var index$d = /*#__PURE__*/Object.freeze({
+var index$e = /*#__PURE__*/Object.freeze({
     __proto__: null,
     Queue: Queue,
     TaskQueue: TaskQueue
+});
+
+class Model {
+}
+
+class View {
+}
+
+/***auto-create-index***/
+
+var index$d = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    Model: Model,
+    View: View
+});
+
+/***auto-create-index***/
+
+var index$c = /*#__PURE__*/Object.freeze({
+    __proto__: null
 });
 
 class Reducer {
@@ -2138,16 +2144,10 @@ class ReduceItem {
 
 /***auto-create-index***/
 
-var index$c = /*#__PURE__*/Object.freeze({
+var index$b = /*#__PURE__*/Object.freeze({
     __proto__: null,
     ReduceItem: ReduceItem,
     Reducer: Reducer
-});
-
-/***auto-create-index***/
-
-var index$b = /*#__PURE__*/Object.freeze({
-    __proto__: null
 });
 
 class ScriptEngine {
@@ -3159,6 +3159,16 @@ var index$2 = /*#__PURE__*/Object.freeze({
     __proto__: null
 });
 
+class WindowLoader {
+}
+
+/***auto-create-index***/
+
+var index$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    WindowLoader: WindowLoader
+});
+
 class World {
     constructor() {
         this.indexerMap = new SingletonMap();
@@ -3210,20 +3220,10 @@ class ComponentIndexer {
     }
 }
 
-var index$1 = /*#__PURE__*/Object.freeze({
+var index = /*#__PURE__*/Object.freeze({
     __proto__: null,
     ComponentIndexer: ComponentIndexer,
     World: World
-});
-
-class WindowLoader {
-}
-
-/***auto-create-index***/
-
-var index = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    WindowLoader: WindowLoader
 });
 
 exports.Context = Context$1;
@@ -3245,10 +3245,10 @@ exports.flow = index$i;
 exports.lobby = index$h;
 exports.map = index$g;
 exports.math = index$f;
-exports.mvc = index$e;
-exports.queue = index$d;
-exports.reducer = index$c;
-exports.scene = index$b;
+exports.mvc = index$d;
+exports.queue = index$e;
+exports.reducer = index$b;
+exports.scene = index$c;
 exports.scripts = index$a;
 exports.services = index$9;
 exports.sheet = index$8;
@@ -3258,5 +3258,5 @@ exports.table = index$5;
 exports.task = index$4;
 exports.trigger = index$3;
 exports.view = index$2;
-exports.window = index;
-exports.world = index$1;
+exports.window = index$1;
+exports.world = index;

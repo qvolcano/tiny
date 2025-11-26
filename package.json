@@ -88,23 +88,23 @@
       "ms": [
         "dist\\ms\\index.d.ts"
       ],
-      "mvc": [
-        "dist\\mvc\\index.d.ts"
-      ],
       "queue": [
         "dist\\queue\\index.d.ts"
       ],
-      "reducer": [
-        "dist\\reducer\\index.d.ts"
+      "mvc": [
+        "dist\\mvc\\index.d.ts"
       ],
       "scene": [
         "dist\\scene\\index.d.ts"
       ],
-      "scripts": [
-        "dist\\scripts\\index.d.ts"
+      "reducer": [
+        "dist\\reducer\\index.d.ts"
       ],
       "server": [
         "dist\\server\\index.d.ts"
+      ],
+      "scripts": [
+        "dist\\scripts\\index.d.ts"
       ],
       "services": [
         "dist\\services\\index.d.ts"
@@ -133,11 +133,11 @@
       "view": [
         "dist\\view\\index.d.ts"
       ],
-      "world": [
-        "dist\\world\\index.d.ts"
-      ],
       "window": [
         "dist\\window\\index.d.ts"
+      ],
+      "world": [
+        "dist\\world\\index.d.ts"
       ],
       ".": [
         "dist/index.d.ts"
@@ -209,29 +209,29 @@
       "require": "./dist/ms\\index.cjs.js",
       "import": "./dist/ms\\index.js"
     },
-    "./mvc": {
-      "require": "./dist/mvc\\index.cjs.js",
-      "import": "./dist/mvc\\index.js"
-    },
     "./queue": {
       "require": "./dist/queue\\index.cjs.js",
       "import": "./dist/queue\\index.js"
     },
-    "./reducer": {
-      "require": "./dist/reducer\\index.cjs.js",
-      "import": "./dist/reducer\\index.js"
+    "./mvc": {
+      "require": "./dist/mvc\\index.cjs.js",
+      "import": "./dist/mvc\\index.js"
     },
     "./scene": {
       "require": "./dist/scene\\index.cjs.js",
       "import": "./dist/scene\\index.js"
     },
-    "./scripts": {
-      "require": "./dist/scripts\\index.cjs.js",
-      "import": "./dist/scripts\\index.js"
+    "./reducer": {
+      "require": "./dist/reducer\\index.cjs.js",
+      "import": "./dist/reducer\\index.js"
     },
     "./server": {
       "require": "./dist/server\\index.cjs.js",
       "import": "./dist/server\\index.js"
+    },
+    "./scripts": {
+      "require": "./dist/scripts\\index.cjs.js",
+      "import": "./dist/scripts\\index.js"
     },
     "./services": {
       "require": "./dist/services\\index.cjs.js",
@@ -269,13 +269,13 @@
       "require": "./dist/view\\index.cjs.js",
       "import": "./dist/view\\index.js"
     },
-    "./world": {
-      "require": "./dist/world\\index.cjs.js",
-      "import": "./dist/world\\index.js"
-    },
     "./window": {
       "require": "./dist/window\\index.cjs.js",
       "import": "./dist/window\\index.js"
+    },
+    "./world": {
+      "require": "./dist/world\\index.cjs.js",
+      "import": "./dist/world\\index.js"
     },
     ".": {
       "require": "./dist/index.cjs.js",
