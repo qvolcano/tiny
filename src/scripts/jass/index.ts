@@ -7,6 +7,8 @@ export enum TOKEN_TYPE {
     COM,
     DEFAULT
 }
+type Token = { value: any, type: TOKEN_TYPE }
+type Processor = (token: Token, context: ScriptContext) => void
 export class ScriptScope {
     values = {}
     parent: ScriptScope
@@ -41,7 +43,7 @@ export class ScriptContext {
     }
 
     get_value(key: string) {
-        return this.scope.get_value(key) ||this.parent.get_value(key)
+        return this.scope.get_value(key) || this.parent?.get_value(key)
     }
 
     set_value(key: string, value: any) {
@@ -49,32 +51,34 @@ export class ScriptContext {
     }
 
 }
-export const JassRuntimeProcessor = {
-    [TOKEN_TYPE.DEFAULT]: function (token: { value: any, type: TOKEN_TYPE }, context: ScriptContext) {
+export const createJassRuntimeProcessor = (): Record<TOKEN_TYPE, Processor> => {
+    const processors: Partial<Record<TOKEN_TYPE, Processor>> = {}
+    processors[TOKEN_TYPE.DEFAULT] = function (token: Token, context: ScriptContext) {
         context.scope.stack.push(token.value)
-    },
-    [TOKEN_TYPE.LP]: function (token: { value: any, type: TOKEN_TYPE }, context: ScriptContext) {
+    }
+    processors[TOKEN_TYPE.LP] = function (token: Token, context: ScriptContext) {
         context.down()
-    },
-    [TOKEN_TYPE.RP]: function (token: { value: any, type: TOKEN_TYPE }, context: ScriptContext) {
+    }
+    processors[TOKEN_TYPE.RP] = function (token: Token, context: ScriptContext) {
         let stack = context.scope.stack
         context.up()
         let mothed_name = context.scope.stack.pop()
         let mothed = context.get_value(mothed_name)
-        mothed.apply(null,stack)
-    },
-    [TOKEN_TYPE.COM]: function (token: { value: any, type: TOKEN_TYPE }, context: ScriptContext) {
+        mothed.apply(null, stack)
+    }
+    processors[TOKEN_TYPE.COM] = function (_token: Token, _context: ScriptContext) {
 
-    },
-    [TOKEN_TYPE.STRING]: function (token: { value: any, type: TOKEN_TYPE }, context: ScriptContext) {
-        context.scope.stack.push(token.value)
-    },
-    [TOKEN_TYPE.KEY]: function(token: { value: any, type: TOKEN_TYPE }, context: ScriptContext) {
+    }
+    processors[TOKEN_TYPE.STRING] = function (token: Token, context: ScriptContext) {
         context.scope.stack.push(token.value)
     }
-
-
+    processors[TOKEN_TYPE.KEY] = function (token: Token, context: ScriptContext) {
+        context.scope.stack.push(token.value)
+    }
+    return processors as Record<TOKEN_TYPE, Processor>
 }
+
+export const JassRuntimeProcessor = createJassRuntimeProcessor()
 
 
 
@@ -270,6 +274,3 @@ export class JassScriptEngine {
 //? compile 编译成function
 //? scope隔离
 //? 暂停继续
-
-var engine = new JassScriptEngine()
-engine.eval("print('test')")

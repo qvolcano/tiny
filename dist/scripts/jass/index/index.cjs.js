@@ -37,35 +37,39 @@ class ScriptContext {
         this.scope = this.scope.parent;
     }
     get_value(key) {
-        return this.scope.get_value(key) || this.parent.get_value(key);
+        var _a;
+        return this.scope.get_value(key) || ((_a = this.parent) === null || _a === void 0 ? void 0 : _a.get_value(key));
     }
     set_value(key, value) {
         this.scope.set_value(key, value);
     }
 }
-const JassRuntimeProcessor = {
-    [exports.TOKEN_TYPE.DEFAULT]: function (token, context) {
+const createJassRuntimeProcessor = () => {
+    const processors = {};
+    processors[exports.TOKEN_TYPE.DEFAULT] = function (token, context) {
         context.scope.stack.push(token.value);
-    },
-    [exports.TOKEN_TYPE.LP]: function (token, context) {
+    };
+    processors[exports.TOKEN_TYPE.LP] = function (_token, context) {
         context.down();
-    },
-    [exports.TOKEN_TYPE.RP]: function (token, context) {
+    };
+    processors[exports.TOKEN_TYPE.RP] = function (_token, context) {
         let stack = context.scope.stack;
         context.up();
         let mothed_name = context.scope.stack.pop();
         let mothed = context.get_value(mothed_name);
         mothed.apply(null, stack);
-    },
-    [exports.TOKEN_TYPE.COM]: function (token, context) {
-    },
-    [exports.TOKEN_TYPE.STRING]: function (token, context) {
+    };
+    processors[exports.TOKEN_TYPE.COM] = function (_token, _context) {
+    };
+    processors[exports.TOKEN_TYPE.STRING] = function (token, context) {
         context.scope.stack.push(token.value);
-    },
-    [exports.TOKEN_TYPE.KEY]: function (token, context) {
+    };
+    processors[exports.TOKEN_TYPE.KEY] = function (token, context) {
         context.scope.stack.push(token.value);
-    }
+    };
+    return processors;
 };
+const JassRuntimeProcessor = createJassRuntimeProcessor();
 const BUILTIN_TOKEN_READER = {
     TOKEN_COM: {
         type: exports.TOKEN_TYPE.COM,
@@ -230,10 +234,9 @@ class JassScriptEngine {
 //? compile 编译成function
 //? scope隔离
 //? 暂停继续
-var engine = new JassScriptEngine();
-engine.eval("print('test')");
 
 exports.BUILTIN_TOKEN_READER = BUILTIN_TOKEN_READER;
+exports.createJassRuntimeProcessor = createJassRuntimeProcessor;
 exports.JassRuntimeProcessor = JassRuntimeProcessor;
 exports.JassScriptEngine = JassScriptEngine;
 exports.ScriptContext = ScriptContext;

@@ -24,6 +24,7 @@ exports.ScriptRender = index$1.ScriptRender;
 exports.ScriptRuntime = index$1.ScriptRuntime;
 exports.ScriptScope = index$1.ScriptScope;
 exports.ScriptSerializer = index$1.ScriptSerializer;
+exports.createJassRuntimeProcessor = index$1.createJassRuntimeProcessor;
 Object.defineProperty(exports, 'TOKEN_TYPE', {
 	enumerable: true,
 	get: function () { return index$1.TOKEN_TYPE; }

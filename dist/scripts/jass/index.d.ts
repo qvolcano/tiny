@@ -25,32 +25,13 @@ export declare class ScriptContext {
     get_value(key: string): any;
     set_value(key: string, value: any): void;
 }
-export declare const JassRuntimeProcessor: {
-    6: (token: {
-        value: any;
-        type: TOKEN_TYPE;
-    }, context: ScriptContext) => void;
-    3: (token: {
-        value: any;
-        type: TOKEN_TYPE;
-    }, context: ScriptContext) => void;
-    4: (token: {
-        value: any;
-        type: TOKEN_TYPE;
-    }, context: ScriptContext) => void;
-    5: (token: {
-        value: any;
-        type: TOKEN_TYPE;
-    }, context: ScriptContext) => void;
-    1: (token: {
-        value: any;
-        type: TOKEN_TYPE;
-    }, context: ScriptContext) => void;
-    2: (token: {
-        value: any;
-        type: TOKEN_TYPE;
-    }, context: ScriptContext) => void;
+export type JassToken = {
+    value: any;
+    type: TOKEN_TYPE;
 };
+export type JassProcessor = (token: JassToken, context: ScriptContext) => void;
+export declare const createJassRuntimeProcessor: () => Record<TOKEN_TYPE, JassProcessor>;
+export declare const JassRuntimeProcessor: Record<TOKEN_TYPE, JassProcessor>;
 export type TokenReader = {
     type: TOKEN_TYPE;
     check: (char: string) => boolean;

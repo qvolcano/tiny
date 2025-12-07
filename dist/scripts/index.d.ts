@@ -76,32 +76,13 @@ declare class ScriptContext {
     get_value(key: string): any;
     set_value(key: string, value: any): void;
 }
-declare const JassRuntimeProcessor: {
-    6: (token: {
-        value: any;
-        type: TOKEN_TYPE;
-    }, context: ScriptContext) => void;
-    3: (token: {
-        value: any;
-        type: TOKEN_TYPE;
-    }, context: ScriptContext) => void;
-    4: (token: {
-        value: any;
-        type: TOKEN_TYPE;
-    }, context: ScriptContext) => void;
-    5: (token: {
-        value: any;
-        type: TOKEN_TYPE;
-    }, context: ScriptContext) => void;
-    1: (token: {
-        value: any;
-        type: TOKEN_TYPE;
-    }, context: ScriptContext) => void;
-    2: (token: {
-        value: any;
-        type: TOKEN_TYPE;
-    }, context: ScriptContext) => void;
+type JassToken = {
+    value: any;
+    type: TOKEN_TYPE;
 };
+type JassProcessor = (token: JassToken, context: ScriptContext) => void;
+declare const createJassRuntimeProcessor: () => Record<TOKEN_TYPE, JassProcessor>;
+declare const JassRuntimeProcessor: Record<TOKEN_TYPE, JassProcessor>;
 type TokenReader = {
     type: TOKEN_TYPE;
     check: (char: string) => boolean;
@@ -288,4 +269,4 @@ declare class TrickScriptEngine extends ScriptEngine {
     private input;
 }
 
-export { BUILTIN_TOKEN_READER, Bindings, Block, BlockScriptRuntime, IScriptContext, JassRuntimeProcessor, JassScriptEngine, ReliScriptEngine, ReliTokenReader, ScriptContext, ScriptEngine, ScriptRender, ScriptRuntime, ScriptScope, ScriptSerializer, StackFlowContext, StackRuntime, TOKEN_TYPE, TinyScriptContext, TinyScriptEngine, TinyScriptRuntime, TinyTokenReader, TinyTokenReaderRule, TinyTokenType, Token, TokenReader, TrickScriptEngine, builtin, rple };
+export { BUILTIN_TOKEN_READER, Bindings, Block, BlockScriptRuntime, IScriptContext, JassProcessor, JassRuntimeProcessor, JassScriptEngine, JassToken, ReliScriptEngine, ReliTokenReader, ScriptContext, ScriptEngine, ScriptRender, ScriptRuntime, ScriptScope, ScriptSerializer, StackFlowContext, StackRuntime, TOKEN_TYPE, TinyScriptContext, TinyScriptEngine, TinyScriptRuntime, TinyTokenReader, TinyTokenReaderRule, TinyTokenType, Token, TokenReader, TrickScriptEngine, builtin, createJassRuntimeProcessor, rple };
