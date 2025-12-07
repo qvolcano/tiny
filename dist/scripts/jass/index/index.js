@@ -47,10 +47,10 @@ const createJassRuntimeProcessor = () => {
     processors[TOKEN_TYPE.DEFAULT] = function (token, context) {
         context.scope.stack.push(token.value);
     };
-    processors[TOKEN_TYPE.LP] = function (_token, context) {
+    processors[TOKEN_TYPE.LP] = function (token, context) {
         context.down();
     };
-    processors[TOKEN_TYPE.RP] = function (_token, context) {
+    processors[TOKEN_TYPE.RP] = function (token, context) {
         let stack = context.scope.stack;
         context.up();
         let mothed_name = context.scope.stack.pop();

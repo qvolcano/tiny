@@ -49,10 +49,10 @@ const createJassRuntimeProcessor = () => {
     processors[exports.TOKEN_TYPE.DEFAULT] = function (token, context) {
         context.scope.stack.push(token.value);
     };
-    processors[exports.TOKEN_TYPE.LP] = function (_token, context) {
+    processors[exports.TOKEN_TYPE.LP] = function (token, context) {
         context.down();
     };
-    processors[exports.TOKEN_TYPE.RP] = function (_token, context) {
+    processors[exports.TOKEN_TYPE.RP] = function (token, context) {
         let stack = context.scope.stack;
         context.up();
         let mothed_name = context.scope.stack.pop();
@@ -236,7 +236,6 @@ class JassScriptEngine {
 //? 暂停继续
 
 exports.BUILTIN_TOKEN_READER = BUILTIN_TOKEN_READER;
-exports.createJassRuntimeProcessor = createJassRuntimeProcessor;
 exports.JassRuntimeProcessor = JassRuntimeProcessor;
 exports.JassScriptEngine = JassScriptEngine;
 exports.ScriptContext = ScriptContext;
@@ -244,3 +243,4 @@ exports.ScriptRender = ScriptRender;
 exports.ScriptRuntime = ScriptRuntime;
 exports.ScriptScope = ScriptScope;
 exports.ScriptSerializer = ScriptSerializer;
+exports.createJassRuntimeProcessor = createJassRuntimeProcessor;

@@ -39,16 +39,6 @@ interface Block {
     valueOf(): any;
 }
 
-declare class rple {
-    grammars: {
-        start: (char: string) => boolean;
-        match: (char: string) => boolean;
-    }[];
-    eval(): void;
-    compile(script: string): Function;
-    readTokens(script: string): any[];
-}
-
 declare enum TOKEN_TYPE {
     NUMBER = 0,
     STRING = 1,
@@ -58,6 +48,11 @@ declare enum TOKEN_TYPE {
     COM = 5,
     DEFAULT = 6
 }
+type Token$1 = {
+    value: any;
+    type: TOKEN_TYPE;
+};
+type Processor = (token: Token$1, context: ScriptContext) => void;
 declare class ScriptScope {
     values: {};
     parent: ScriptScope;
@@ -76,13 +71,8 @@ declare class ScriptContext {
     get_value(key: string): any;
     set_value(key: string, value: any): void;
 }
-type JassToken = {
-    value: any;
-    type: TOKEN_TYPE;
-};
-type JassProcessor = (token: JassToken, context: ScriptContext) => void;
-declare const createJassRuntimeProcessor: () => Record<TOKEN_TYPE, JassProcessor>;
-declare const JassRuntimeProcessor: Record<TOKEN_TYPE, JassProcessor>;
+declare const createJassRuntimeProcessor: () => Record<TOKEN_TYPE, Processor>;
+declare const JassRuntimeProcessor: Record<TOKEN_TYPE, Processor>;
 type TokenReader = {
     type: TOKEN_TYPE;
     check: (char: string) => boolean;
@@ -162,6 +152,16 @@ declare class JassScriptEngine {
     eval(script: string): void;
     commpile(script: string, scriptScope: ScriptScope): void;
     setContext(context: ScriptContext): void;
+}
+
+declare class rple {
+    grammars: {
+        start: (char: string) => boolean;
+        match: (char: string) => boolean;
+    }[];
+    eval(): void;
+    compile(script: string): Function;
+    readTokens(script: string): any[];
 }
 
 declare class ReliScriptEngine {
@@ -269,4 +269,4 @@ declare class TrickScriptEngine extends ScriptEngine {
     private input;
 }
 
-export { BUILTIN_TOKEN_READER, Bindings, Block, BlockScriptRuntime, IScriptContext, JassProcessor, JassRuntimeProcessor, JassScriptEngine, JassToken, ReliScriptEngine, ReliTokenReader, ScriptContext, ScriptEngine, ScriptRender, ScriptRuntime, ScriptScope, ScriptSerializer, StackFlowContext, StackRuntime, TOKEN_TYPE, TinyScriptContext, TinyScriptEngine, TinyScriptRuntime, TinyTokenReader, TinyTokenReaderRule, TinyTokenType, Token, TokenReader, TrickScriptEngine, builtin, createJassRuntimeProcessor, rple };
+export { BUILTIN_TOKEN_READER, Bindings, Block, BlockScriptRuntime, IScriptContext, JassRuntimeProcessor, JassScriptEngine, ReliScriptEngine, ReliTokenReader, ScriptContext, ScriptEngine, ScriptRender, ScriptRuntime, ScriptScope, ScriptSerializer, StackFlowContext, StackRuntime, TOKEN_TYPE, TinyScriptContext, TinyScriptEngine, TinyScriptRuntime, TinyTokenReader, TinyTokenReaderRule, TinyTokenType, Token, TokenReader, TrickScriptEngine, builtin, createJassRuntimeProcessor, rple };

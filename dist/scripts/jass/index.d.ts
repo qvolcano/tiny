@@ -7,6 +7,11 @@ export declare enum TOKEN_TYPE {
     COM = 5,
     DEFAULT = 6
 }
+type Token = {
+    value: any;
+    type: TOKEN_TYPE;
+};
+type Processor = (token: Token, context: ScriptContext) => void;
 export declare class ScriptScope {
     values: {};
     parent: ScriptScope;
@@ -25,13 +30,8 @@ export declare class ScriptContext {
     get_value(key: string): any;
     set_value(key: string, value: any): void;
 }
-export type JassToken = {
-    value: any;
-    type: TOKEN_TYPE;
-};
-export type JassProcessor = (token: JassToken, context: ScriptContext) => void;
-export declare const createJassRuntimeProcessor: () => Record<TOKEN_TYPE, JassProcessor>;
-export declare const JassRuntimeProcessor: Record<TOKEN_TYPE, JassProcessor>;
+export declare const createJassRuntimeProcessor: () => Record<TOKEN_TYPE, Processor>;
+export declare const JassRuntimeProcessor: Record<TOKEN_TYPE, Processor>;
 export type TokenReader = {
     type: TOKEN_TYPE;
     check: (char: string) => boolean;
@@ -112,3 +112,4 @@ export declare class JassScriptEngine {
     commpile(script: string, scriptScope: ScriptScope): void;
     setContext(context: ScriptContext): void;
 }
+export {};

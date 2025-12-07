@@ -1998,6 +1998,20 @@ let Model$1 = class Model {
 // export class ViewSystem extends System {
 // }
 
+class Model {
+}
+
+class View {
+}
+
+/***auto-create-index***/
+
+var index$e = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    Model: Model,
+    View: View
+});
+
 class Queue {
     constructor(executor, autoStart = true) {
         this.executor = executor;
@@ -2106,30 +2120,10 @@ class TaskQueue {
 
 /***auto-create-index***/
 
-var index$e = /*#__PURE__*/Object.freeze({
+var index$d = /*#__PURE__*/Object.freeze({
     __proto__: null,
     Queue: Queue,
     TaskQueue: TaskQueue
-});
-
-class Model {
-}
-
-class View {
-}
-
-/***auto-create-index***/
-
-var index$d = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    Model: Model,
-    View: View
-});
-
-/***auto-create-index***/
-
-var index$c = /*#__PURE__*/Object.freeze({
-    __proto__: null
 });
 
 class Reducer {
@@ -2144,10 +2138,16 @@ class ReduceItem {
 
 /***auto-create-index***/
 
-var index$b = /*#__PURE__*/Object.freeze({
+var index$c = /*#__PURE__*/Object.freeze({
     __proto__: null,
     ReduceItem: ReduceItem,
     Reducer: Reducer
+});
+
+/***auto-create-index***/
+
+var index$b = /*#__PURE__*/Object.freeze({
+    __proto__: null
 });
 
 class ScriptEngine {
@@ -2160,92 +2160,6 @@ class BlockScriptRuntime {
 const builtin$1 = {
     "sum": (...args) => {
         return args.reduce((a, b) => a.valueOf() + b.valueOf(), 0);
-    }
-};
-
-class rple {
-    constructor() {
-        this.grammars = [
-            Word,
-            Nums,
-            LeftBracket,
-            Bracket,
-        ];
-    }
-    eval() {
-    }
-    compile(script) {
-        this.readTokens(script);
-        // for (let i of tokens) {
-        //     context.call(i);
-        // }
-        // return null
-        throw new Error;
-    }
-    readTokens(script) {
-        let buffer = "";
-        let tokens = [];
-        let grammar = null;
-        for (let i of script) {
-            if (grammar) {
-                if (grammar.match(i)) {
-                    buffer = buffer.concat(i);
-                }
-                else {
-                    tokens.push(buffer);
-                }
-            }
-            else {
-                for (let ig of this.grammars) {
-                    if (ig.start(i)) {
-                        grammar = ig;
-                        buffer = i;
-                        break;
-                    }
-                }
-            }
-        }
-        return tokens;
-    }
-}
-const Nums = {
-    doted: false,
-    start: function (char) {
-        let code = char.charCodeAt(0);
-        Nums.doted = false;
-        return code >= 47 && code <= 57;
-    },
-    match: function (char) {
-        let code = char.charCodeAt(0);
-        if (code >= 47 && code <= 57) {
-            return true;
-        }
-        else if (code == 46) {
-            Nums.doted = true;
-            return true;
-        }
-    }
-};
-const LeftBracket = {
-    start: function (char) { return char == "("; },
-    match: function (char) { return false; }
-};
-const Bracket = {
-    start: function (char) { return char == "(" || char == ")" || char == ""; },
-    match: function (char) { return false; }
-};
-const Word = {
-    start: function (char) {
-        let code = char.charCodeAt(0);
-        if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
-            return true;
-        }
-    },
-    match: function (char) {
-        let code = char.charCodeAt(0);
-        if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
-            return true;
-        }
     }
 };
 
@@ -2298,10 +2212,10 @@ const createJassRuntimeProcessor = () => {
     processors[TOKEN_TYPE.DEFAULT] = function (token, context) {
         context.scope.stack.push(token.value);
     };
-    processors[TOKEN_TYPE.LP] = function (_token, context) {
+    processors[TOKEN_TYPE.LP] = function (token, context) {
         context.down();
     };
-    processors[TOKEN_TYPE.RP] = function (_token, context) {
+    processors[TOKEN_TYPE.RP] = function (token, context) {
         let stack = context.scope.stack;
         context.up();
         let mothed_name = context.scope.stack.pop();
@@ -2483,6 +2397,92 @@ class JassScriptEngine {
 //? compile 编译成function
 //? scope隔离
 //? 暂停继续
+
+class rple {
+    constructor() {
+        this.grammars = [
+            Word,
+            Nums,
+            LeftBracket,
+            Bracket,
+        ];
+    }
+    eval() {
+    }
+    compile(script) {
+        this.readTokens(script);
+        // for (let i of tokens) {
+        //     context.call(i);
+        // }
+        // return null
+        throw new Error;
+    }
+    readTokens(script) {
+        let buffer = "";
+        let tokens = [];
+        let grammar = null;
+        for (let i of script) {
+            if (grammar) {
+                if (grammar.match(i)) {
+                    buffer = buffer.concat(i);
+                }
+                else {
+                    tokens.push(buffer);
+                }
+            }
+            else {
+                for (let ig of this.grammars) {
+                    if (ig.start(i)) {
+                        grammar = ig;
+                        buffer = i;
+                        break;
+                    }
+                }
+            }
+        }
+        return tokens;
+    }
+}
+const Nums = {
+    doted: false,
+    start: function (char) {
+        let code = char.charCodeAt(0);
+        Nums.doted = false;
+        return code >= 47 && code <= 57;
+    },
+    match: function (char) {
+        let code = char.charCodeAt(0);
+        if (code >= 47 && code <= 57) {
+            return true;
+        }
+        else if (code == 46) {
+            Nums.doted = true;
+            return true;
+        }
+    }
+};
+const LeftBracket = {
+    start: function (char) { return char == "("; },
+    match: function (char) { return false; }
+};
+const Bracket = {
+    start: function (char) { return char == "(" || char == ")" || char == ""; },
+    match: function (char) { return false; }
+};
+const Word = {
+    start: function (char) {
+        let code = char.charCodeAt(0);
+        if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
+            return true;
+        }
+    },
+    match: function (char) {
+        let code = char.charCodeAt(0);
+        if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
+            return true;
+        }
+    }
+};
 
 var ReliBuildin = {
     "if": function (a) { return Boolean(a); },
@@ -2862,7 +2862,6 @@ var index$a = /*#__PURE__*/Object.freeze({
     __proto__: null,
     BUILTIN_TOKEN_READER: BUILTIN_TOKEN_READER,
     BlockScriptRuntime: BlockScriptRuntime,
-    createJassRuntimeProcessor: createJassRuntimeProcessor,
     JassRuntimeProcessor: JassRuntimeProcessor,
     JassScriptEngine: JassScriptEngine,
     ReliScriptEngine: ReliScriptEngine,
@@ -2883,6 +2882,7 @@ var index$a = /*#__PURE__*/Object.freeze({
     get TinyTokenType () { return TinyTokenType; },
     TrickScriptEngine: TrickScriptEngine,
     builtin: builtin$1,
+    createJassRuntimeProcessor: createJassRuntimeProcessor,
     rple: rple
 });
 
@@ -3248,10 +3248,10 @@ exports.flow = index$i;
 exports.lobby = index$h;
 exports.map = index$g;
 exports.math = index$f;
-exports.mvc = index$d;
-exports.queue = index$e;
-exports.reducer = index$b;
-exports.scene = index$c;
+exports.mvc = index$e;
+exports.queue = index$d;
+exports.reducer = index$c;
+exports.scene = index$b;
 exports.scripts = index$a;
 exports.services = index$9;
 exports.sheet = index$8;
