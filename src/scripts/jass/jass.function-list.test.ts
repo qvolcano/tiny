@@ -31,3 +31,16 @@ calls.length = 0;
 const compiled = engine.compile("run([f1(5),f2(6)])");
 compiled();
 assertEqual(calls.join(","), "f1:5,f2:6", "compile run");
+
+let nestedValue: any = null;
+engine.global.set_value("f3", () => 7);
+engine.global.set_value("f2", (value: any) => value + 1);
+engine.global.set_value("f1", (value: any) => {
+    nestedValue = value;
+});
+engine.eval("f1(f2(f3()))");
+assertEqual(nestedValue, 8, "nested call return");
+
+nestedValue = null;
+engine.eval("run([f1(f2(f3()))])");
+assertEqual(nestedValue, 8, "nested call return in list");

@@ -11,11 +11,22 @@ export enum TOKEN_TYPE {
 }
 type Token = { value: any, type: TOKEN_TYPE }
 type Processor = (token: Token, context: ScriptContext) => void
-type FunctionListItem = { fn: Function, args: any[] }
+type CallNode = { __jass_call: true, fn: Function, args: any[] }
+type FunctionListItem = CallNode
+type ListFrame = { list: FunctionList, scope: ScriptScope }
 export type FunctionList = {
     (): any
     items: FunctionListItem[]
     run: () => any
+}
+
+const isCallNode = (value: any): value is CallNode => {
+    return Boolean(value && value.__jass_call)
+}
+
+const evaluateCallNode = (node: CallNode): any => {
+    let args = node.args.map((arg) => isCallNode(arg) ? evaluateCallNode(arg) : arg)
+    return node.fn.apply(null, args)
 }
 
 export const createFunctionList = (): FunctionList => {
@@ -24,7 +35,7 @@ export const createFunctionList = (): FunctionList => {
     fn.run = () => {
         let result
         for (let item of fn.items) {
-            result = item.fn.apply(null, item.args)
+            result = evaluateCallNode(item)
         }
         return result
     }
@@ -52,7 +63,7 @@ export class ScriptContext {
     parent: ScriptContext
     scope: ScriptScope = new ScriptScope()
     // 解析期函数序列栈，用于处理 [] 嵌套
-    list_stack: FunctionList[] = []
+    list_stack: ListFrame[] = []
     constructor(parent?: ScriptContext) {
         this.parent = parent
     }
@@ -88,25 +99,32 @@ export const createJassRuntimeProcessor = (): Record<TOKEN_TYPE, Processor> => {
         let mothed_name = context.scope.stack.pop()
         let mothed = typeof mothed_name === "function" ? mothed_name : context.get_value(mothed_name)
         if (context.list_stack.length > 0) {
-            let list = context.list_stack[context.list_stack.length - 1]
+            let frame = context.list_stack[context.list_stack.length - 1]
+            let call = { __jass_call: true, fn: mothed, args: stack.slice() }
             // 列表模式下只收集调用，不执行
-            list.items.push({ fn: mothed, args: stack.slice() })
+            if (frame.scope === context.scope) {
+                frame.list.items.push(call)
+            } else {
+                context.scope.stack.push(call)
+            }
             return
         }
-        mothed.apply(null, stack)
+        let result = mothed.apply(null, stack)
+        // 让外层调用可以拿到返回值
+        context.scope.stack.push(result)
     }
     processors[TOKEN_TYPE.COM] = function (_token: Token, _context: ScriptContext) {
 
     }
     processors[TOKEN_TYPE.LB] = function (_token: Token, context: ScriptContext) {
         // 运行期构建函数序列
-        context.list_stack.push(createFunctionList())
+        context.list_stack.push({ list: createFunctionList(), scope: context.scope })
     }
     processors[TOKEN_TYPE.RB] = function (_token: Token, context: ScriptContext) {
         if (context.list_stack.length > 0) {
             // 结束函数序列，将列表作为值压回参数栈
-            let list = context.list_stack.pop()
-            context.scope.stack.push(list)
+            let frame = context.list_stack.pop()
+            context.scope.stack.push(frame.list)
         }
     }
     processors[TOKEN_TYPE.STRING] = function (token: Token, context: ScriptContext) {
@@ -324,7 +342,7 @@ export class JassScriptEngine {
         let context = new ScriptContext(this.context || this.global)
         let program = createFunctionList()
         // 让整个脚本在列表模式下解析，等价于隐式的 []
-        context.list_stack.push(program)
+        context.list_stack.push({ list: program, scope: context.scope })
         while (token = stream.read()) {
             this.runtime.input(token, context)
         }
