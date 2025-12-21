@@ -8,7 +8,9 @@ exports.TOKEN_TYPE = void 0;
     TOKEN_TYPE[TOKEN_TYPE["LP"] = 3] = "LP";
     TOKEN_TYPE[TOKEN_TYPE["RP"] = 4] = "RP";
     TOKEN_TYPE[TOKEN_TYPE["COM"] = 5] = "COM";
-    TOKEN_TYPE[TOKEN_TYPE["DEFAULT"] = 6] = "DEFAULT";
+    TOKEN_TYPE[TOKEN_TYPE["LB"] = 6] = "LB";
+    TOKEN_TYPE[TOKEN_TYPE["RB"] = 7] = "RB";
+    TOKEN_TYPE[TOKEN_TYPE["DEFAULT"] = 8] = "DEFAULT";
 })(exports.TOKEN_TYPE || (exports.TOKEN_TYPE = {}));
 class ScriptScope {
     constructor(parent) {
@@ -28,6 +30,7 @@ class ScriptScope {
 class ScriptContext {
     constructor(parent) {
         this.scope = new ScriptScope();
+        this.list_stack = [];
         this.parent = parent;
     }
     down() {
@@ -44,6 +47,18 @@ class ScriptContext {
         this.scope.set_value(key, value);
     }
 }
+class FunctionList {
+    constructor() {
+        this.items = [];
+    }
+    run() {
+        let result;
+        for (let item of this.items) {
+            result = item();
+        }
+        return result;
+    }
+}
 const createJassRuntimeProcessor = () => {
     const processors = {};
     processors[exports.TOKEN_TYPE.DEFAULT] = function (token, context) {
@@ -57,9 +72,23 @@ const createJassRuntimeProcessor = () => {
         context.up();
         let mothed_name = context.scope.stack.pop();
         let mothed = context.get_value(mothed_name);
+        if (context.list_stack.length > 0) {
+            let list = context.list_stack[context.list_stack.length - 1];
+            list.items.push(() => mothed.apply(null, stack));
+            return;
+        }
         mothed.apply(null, stack);
     };
     processors[exports.TOKEN_TYPE.COM] = function (_token, _context) {
+    };
+    processors[exports.TOKEN_TYPE.LB] = function (_token, context) {
+        context.list_stack.push(new FunctionList());
+    };
+    processors[exports.TOKEN_TYPE.RB] = function (_token, context) {
+        if (context.list_stack.length > 0) {
+            let list = context.list_stack.pop();
+            context.scope.stack.push(list);
+        }
     };
     processors[exports.TOKEN_TYPE.STRING] = function (token, context) {
         context.scope.stack.push(token.value);
@@ -74,6 +103,16 @@ const BUILTIN_TOKEN_READER = {
     TOKEN_COM: {
         type: exports.TOKEN_TYPE.COM,
         start: ",",
+        check: (char) => false
+    },
+    TOKEN_LB: {
+        type: exports.TOKEN_TYPE.LB,
+        start: "[",
+        check: (char) => false
+    },
+    TOKEN_RB: {
+        type: exports.TOKEN_TYPE.RB,
+        start: "]",
         check: (char) => false
     },
     TOKEN_LP: {
@@ -201,6 +240,8 @@ class JassScriptEngine {
         this.serializer = new ScriptSerializer([
             BUILTIN_TOKEN_READER.TOKEN_KEY,
             BUILTIN_TOKEN_READER.TOKEN_COM,
+            BUILTIN_TOKEN_READER.TOKEN_LB,
+            BUILTIN_TOKEN_READER.TOKEN_RB,
             BUILTIN_TOKEN_READER.TOKEN_LP,
             BUILTIN_TOKEN_READER.TOKEN_RP,
             BUILTIN_TOKEN_READER.TOKEN_NUMBER,
@@ -209,6 +250,13 @@ class JassScriptEngine {
         this.runtime = new ScriptRuntime(JassRuntimeProcessor);
         this.global = new ScriptContext();
         this.global.set_value("print", (...args) => console.log.apply(null, args));
+        this.global.set_value("run", (list) => list && list.run());
+        this.global.set_value("if", (cond, yes, no) => {
+            if (cond) {
+                return yes instanceof FunctionList ? yes.run() : yes;
+            }
+            return no instanceof FunctionList ? no.run() : no;
+        });
     }
     eval(script) {
         let stream = this.serializer.createReader(script);
@@ -236,6 +284,7 @@ class JassScriptEngine {
 //? 暂停继续
 
 exports.BUILTIN_TOKEN_READER = BUILTIN_TOKEN_READER;
+exports.FunctionList = FunctionList;
 exports.JassRuntimeProcessor = JassRuntimeProcessor;
 exports.JassScriptEngine = JassScriptEngine;
 exports.ScriptContext = ScriptContext;

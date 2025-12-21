@@ -39,6 +39,16 @@ interface Block {
     valueOf(): any;
 }
 
+declare class rple {
+    grammars: {
+        start: (char: string) => boolean;
+        match: (char: string) => boolean;
+    }[];
+    eval(): void;
+    compile(script: string): Function;
+    readTokens(script: string): any[];
+}
+
 declare enum TOKEN_TYPE {
     NUMBER = 0,
     STRING = 1,
@@ -46,13 +56,16 @@ declare enum TOKEN_TYPE {
     LP = 3,
     RP = 4,
     COM = 5,
-    DEFAULT = 6
+    LB = 6,
+    RB = 7,
+    DEFAULT = 8
 }
 type Token$1 = {
     value: any;
     type: TOKEN_TYPE;
 };
 type Processor = (token: Token$1, context: ScriptContext) => void;
+type FunctionListItem = () => any;
 declare class ScriptScope {
     values: {};
     parent: ScriptScope;
@@ -65,11 +78,16 @@ declare class ScriptScope {
 declare class ScriptContext {
     parent: ScriptContext;
     scope: ScriptScope;
+    list_stack: FunctionList[];
     constructor(parent?: ScriptContext);
     down(): void;
     up(): void;
     get_value(key: string): any;
     set_value(key: string, value: any): void;
+}
+declare class FunctionList {
+    items: FunctionListItem[];
+    run(): any;
 }
 declare const createJassRuntimeProcessor: () => Record<TOKEN_TYPE, Processor>;
 declare const JassRuntimeProcessor: Record<TOKEN_TYPE, Processor>;
@@ -82,6 +100,16 @@ type TokenReader = {
 };
 declare const BUILTIN_TOKEN_READER: {
     TOKEN_COM: {
+        type: TOKEN_TYPE;
+        start: string;
+        check: (char: string) => boolean;
+    };
+    TOKEN_LB: {
+        type: TOKEN_TYPE;
+        start: string;
+        check: (char: string) => boolean;
+    };
+    TOKEN_RB: {
         type: TOKEN_TYPE;
         start: string;
         check: (char: string) => boolean;
@@ -152,16 +180,6 @@ declare class JassScriptEngine {
     eval(script: string): void;
     commpile(script: string, scriptScope: ScriptScope): void;
     setContext(context: ScriptContext): void;
-}
-
-declare class rple {
-    grammars: {
-        start: (char: string) => boolean;
-        match: (char: string) => boolean;
-    }[];
-    eval(): void;
-    compile(script: string): Function;
-    readTokens(script: string): any[];
 }
 
 declare class ReliScriptEngine {
@@ -269,4 +287,4 @@ declare class TrickScriptEngine extends ScriptEngine {
     private input;
 }
 
-export { BUILTIN_TOKEN_READER, Bindings, Block, BlockScriptRuntime, IScriptContext, JassRuntimeProcessor, JassScriptEngine, ReliScriptEngine, ReliTokenReader, ScriptContext, ScriptEngine, ScriptRender, ScriptRuntime, ScriptScope, ScriptSerializer, StackFlowContext, StackRuntime, TOKEN_TYPE, TinyScriptContext, TinyScriptEngine, TinyScriptRuntime, TinyTokenReader, TinyTokenReaderRule, TinyTokenType, Token, TokenReader, TrickScriptEngine, builtin, createJassRuntimeProcessor, rple };
+export { BUILTIN_TOKEN_READER, Bindings, Block, BlockScriptRuntime, FunctionList, IScriptContext, JassRuntimeProcessor, JassScriptEngine, ReliScriptEngine, ReliTokenReader, ScriptContext, ScriptEngine, ScriptRender, ScriptRuntime, ScriptScope, ScriptSerializer, StackFlowContext, StackRuntime, TOKEN_TYPE, TinyScriptContext, TinyScriptEngine, TinyScriptRuntime, TinyTokenReader, TinyTokenReaderRule, TinyTokenType, Token, TokenReader, TrickScriptEngine, builtin, createJassRuntimeProcessor, rple };

@@ -5,13 +5,16 @@ export declare enum TOKEN_TYPE {
     LP = 3,
     RP = 4,
     COM = 5,
-    DEFAULT = 6
+    LB = 6,
+    RB = 7,
+    DEFAULT = 8
 }
 type Token = {
     value: any;
     type: TOKEN_TYPE;
 };
 type Processor = (token: Token, context: ScriptContext) => void;
+type FunctionListItem = () => any;
 export declare class ScriptScope {
     values: {};
     parent: ScriptScope;
@@ -24,11 +27,16 @@ export declare class ScriptScope {
 export declare class ScriptContext {
     parent: ScriptContext;
     scope: ScriptScope;
+    list_stack: FunctionList[];
     constructor(parent?: ScriptContext);
     down(): void;
     up(): void;
     get_value(key: string): any;
     set_value(key: string, value: any): void;
+}
+export declare class FunctionList {
+    items: FunctionListItem[];
+    run(): any;
 }
 export declare const createJassRuntimeProcessor: () => Record<TOKEN_TYPE, Processor>;
 export declare const JassRuntimeProcessor: Record<TOKEN_TYPE, Processor>;
@@ -41,6 +49,16 @@ export type TokenReader = {
 };
 export declare const BUILTIN_TOKEN_READER: {
     TOKEN_COM: {
+        type: TOKEN_TYPE;
+        start: string;
+        check: (char: string) => boolean;
+    };
+    TOKEN_LB: {
+        type: TOKEN_TYPE;
+        start: string;
+        check: (char: string) => boolean;
+    };
+    TOKEN_RB: {
         type: TOKEN_TYPE;
         start: string;
         check: (char: string) => boolean;

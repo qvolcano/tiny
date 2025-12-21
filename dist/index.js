@@ -2161,6 +2161,92 @@ const builtin$1 = {
     }
 };
 
+class rple {
+    constructor() {
+        this.grammars = [
+            Word,
+            Nums,
+            LeftBracket,
+            Bracket,
+        ];
+    }
+    eval() {
+    }
+    compile(script) {
+        this.readTokens(script);
+        // for (let i of tokens) {
+        //     context.call(i);
+        // }
+        // return null
+        throw new Error;
+    }
+    readTokens(script) {
+        let buffer = "";
+        let tokens = [];
+        let grammar = null;
+        for (let i of script) {
+            if (grammar) {
+                if (grammar.match(i)) {
+                    buffer = buffer.concat(i);
+                }
+                else {
+                    tokens.push(buffer);
+                }
+            }
+            else {
+                for (let ig of this.grammars) {
+                    if (ig.start(i)) {
+                        grammar = ig;
+                        buffer = i;
+                        break;
+                    }
+                }
+            }
+        }
+        return tokens;
+    }
+}
+const Nums = {
+    doted: false,
+    start: function (char) {
+        let code = char.charCodeAt(0);
+        Nums.doted = false;
+        return code >= 47 && code <= 57;
+    },
+    match: function (char) {
+        let code = char.charCodeAt(0);
+        if (code >= 47 && code <= 57) {
+            return true;
+        }
+        else if (code == 46) {
+            Nums.doted = true;
+            return true;
+        }
+    }
+};
+const LeftBracket = {
+    start: function (char) { return char == "("; },
+    match: function (char) { return false; }
+};
+const Bracket = {
+    start: function (char) { return char == "(" || char == ")" || char == ""; },
+    match: function (char) { return false; }
+};
+const Word = {
+    start: function (char) {
+        let code = char.charCodeAt(0);
+        if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
+            return true;
+        }
+    },
+    match: function (char) {
+        let code = char.charCodeAt(0);
+        if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
+            return true;
+        }
+    }
+};
+
 var TOKEN_TYPE;
 (function (TOKEN_TYPE) {
     TOKEN_TYPE[TOKEN_TYPE["NUMBER"] = 0] = "NUMBER";
@@ -2169,7 +2255,9 @@ var TOKEN_TYPE;
     TOKEN_TYPE[TOKEN_TYPE["LP"] = 3] = "LP";
     TOKEN_TYPE[TOKEN_TYPE["RP"] = 4] = "RP";
     TOKEN_TYPE[TOKEN_TYPE["COM"] = 5] = "COM";
-    TOKEN_TYPE[TOKEN_TYPE["DEFAULT"] = 6] = "DEFAULT";
+    TOKEN_TYPE[TOKEN_TYPE["LB"] = 6] = "LB";
+    TOKEN_TYPE[TOKEN_TYPE["RB"] = 7] = "RB";
+    TOKEN_TYPE[TOKEN_TYPE["DEFAULT"] = 8] = "DEFAULT";
 })(TOKEN_TYPE || (TOKEN_TYPE = {}));
 class ScriptScope {
     constructor(parent) {
@@ -2189,6 +2277,7 @@ class ScriptScope {
 class ScriptContext {
     constructor(parent) {
         this.scope = new ScriptScope();
+        this.list_stack = [];
         this.parent = parent;
     }
     down() {
@@ -2205,6 +2294,18 @@ class ScriptContext {
         this.scope.set_value(key, value);
     }
 }
+class FunctionList {
+    constructor() {
+        this.items = [];
+    }
+    run() {
+        let result;
+        for (let item of this.items) {
+            result = item();
+        }
+        return result;
+    }
+}
 const createJassRuntimeProcessor = () => {
     const processors = {};
     processors[TOKEN_TYPE.DEFAULT] = function (token, context) {
@@ -2218,9 +2319,23 @@ const createJassRuntimeProcessor = () => {
         context.up();
         let mothed_name = context.scope.stack.pop();
         let mothed = context.get_value(mothed_name);
+        if (context.list_stack.length > 0) {
+            let list = context.list_stack[context.list_stack.length - 1];
+            list.items.push(() => mothed.apply(null, stack));
+            return;
+        }
         mothed.apply(null, stack);
     };
     processors[TOKEN_TYPE.COM] = function (_token, _context) {
+    };
+    processors[TOKEN_TYPE.LB] = function (_token, context) {
+        context.list_stack.push(new FunctionList());
+    };
+    processors[TOKEN_TYPE.RB] = function (_token, context) {
+        if (context.list_stack.length > 0) {
+            let list = context.list_stack.pop();
+            context.scope.stack.push(list);
+        }
     };
     processors[TOKEN_TYPE.STRING] = function (token, context) {
         context.scope.stack.push(token.value);
@@ -2235,6 +2350,16 @@ const BUILTIN_TOKEN_READER = {
     TOKEN_COM: {
         type: TOKEN_TYPE.COM,
         start: ",",
+        check: (char) => false
+    },
+    TOKEN_LB: {
+        type: TOKEN_TYPE.LB,
+        start: "[",
+        check: (char) => false
+    },
+    TOKEN_RB: {
+        type: TOKEN_TYPE.RB,
+        start: "]",
         check: (char) => false
     },
     TOKEN_LP: {
@@ -2362,6 +2487,8 @@ class JassScriptEngine {
         this.serializer = new ScriptSerializer([
             BUILTIN_TOKEN_READER.TOKEN_KEY,
             BUILTIN_TOKEN_READER.TOKEN_COM,
+            BUILTIN_TOKEN_READER.TOKEN_LB,
+            BUILTIN_TOKEN_READER.TOKEN_RB,
             BUILTIN_TOKEN_READER.TOKEN_LP,
             BUILTIN_TOKEN_READER.TOKEN_RP,
             BUILTIN_TOKEN_READER.TOKEN_NUMBER,
@@ -2370,6 +2497,13 @@ class JassScriptEngine {
         this.runtime = new ScriptRuntime(JassRuntimeProcessor);
         this.global = new ScriptContext();
         this.global.set_value("print", (...args) => console.log.apply(null, args));
+        this.global.set_value("run", (list) => list && list.run());
+        this.global.set_value("if", (cond, yes, no) => {
+            if (cond) {
+                return yes instanceof FunctionList ? yes.run() : yes;
+            }
+            return no instanceof FunctionList ? no.run() : no;
+        });
     }
     eval(script) {
         let stream = this.serializer.createReader(script);
@@ -2395,92 +2529,6 @@ class JassScriptEngine {
 //? compile 编译成function
 //? scope隔离
 //? 暂停继续
-
-class rple {
-    constructor() {
-        this.grammars = [
-            Word,
-            Nums,
-            LeftBracket,
-            Bracket,
-        ];
-    }
-    eval() {
-    }
-    compile(script) {
-        this.readTokens(script);
-        // for (let i of tokens) {
-        //     context.call(i);
-        // }
-        // return null
-        throw new Error;
-    }
-    readTokens(script) {
-        let buffer = "";
-        let tokens = [];
-        let grammar = null;
-        for (let i of script) {
-            if (grammar) {
-                if (grammar.match(i)) {
-                    buffer = buffer.concat(i);
-                }
-                else {
-                    tokens.push(buffer);
-                }
-            }
-            else {
-                for (let ig of this.grammars) {
-                    if (ig.start(i)) {
-                        grammar = ig;
-                        buffer = i;
-                        break;
-                    }
-                }
-            }
-        }
-        return tokens;
-    }
-}
-const Nums = {
-    doted: false,
-    start: function (char) {
-        let code = char.charCodeAt(0);
-        Nums.doted = false;
-        return code >= 47 && code <= 57;
-    },
-    match: function (char) {
-        let code = char.charCodeAt(0);
-        if (code >= 47 && code <= 57) {
-            return true;
-        }
-        else if (code == 46) {
-            Nums.doted = true;
-            return true;
-        }
-    }
-};
-const LeftBracket = {
-    start: function (char) { return char == "("; },
-    match: function (char) { return false; }
-};
-const Bracket = {
-    start: function (char) { return char == "(" || char == ")" || char == ""; },
-    match: function (char) { return false; }
-};
-const Word = {
-    start: function (char) {
-        let code = char.charCodeAt(0);
-        if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
-            return true;
-        }
-    },
-    match: function (char) {
-        let code = char.charCodeAt(0);
-        if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
-            return true;
-        }
-    }
-};
 
 var ReliBuildin = {
     "if": function (a) { return Boolean(a); },
@@ -2860,6 +2908,7 @@ var index$a = /*#__PURE__*/Object.freeze({
     __proto__: null,
     BUILTIN_TOKEN_READER: BUILTIN_TOKEN_READER,
     BlockScriptRuntime: BlockScriptRuntime,
+    FunctionList: FunctionList,
     JassRuntimeProcessor: JassRuntimeProcessor,
     JassScriptEngine: JassScriptEngine,
     ReliScriptEngine: ReliScriptEngine,

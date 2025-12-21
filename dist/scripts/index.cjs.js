@@ -2,8 +2,8 @@
 
 var ScriptEngine = require('./ScriptEngine/index.cjs.js');
 var index = require('./block/index/index.cjs.js');
-var index$1 = require('./jass/index/index.cjs.js');
 var Context = require('./expression/Context/index.cjs.js');
+var index$1 = require('./jass/index/index.cjs.js');
 var ReliScriptEngine = require('./Reli/ReliScriptEngine/index.cjs.js');
 var StackContext = require('./stack/StackContext/index.cjs.js');
 var TinyScriptContext = require('./tiny/TinyScriptContext/index.cjs.js');
@@ -15,7 +15,9 @@ var TrickScriptEngine = require('./trick/TrickScriptEngine/index.cjs.js');
 exports.ScriptEngine = ScriptEngine.ScriptEngine;
 exports.BlockScriptRuntime = index.BlockScriptRuntime;
 exports.builtin = index.builtin;
+exports.rple = Context.rple;
 exports.BUILTIN_TOKEN_READER = index$1.BUILTIN_TOKEN_READER;
+exports.FunctionList = index$1.FunctionList;
 exports.JassRuntimeProcessor = index$1.JassRuntimeProcessor;
 exports.JassScriptEngine = index$1.JassScriptEngine;
 exports.ScriptContext = index$1.ScriptContext;
@@ -28,7 +30,6 @@ Object.defineProperty(exports, 'TOKEN_TYPE', {
 	get: function () { return index$1.TOKEN_TYPE; }
 });
 exports.createJassRuntimeProcessor = index$1.createJassRuntimeProcessor;
-exports.rple = Context.rple;
 exports.ReliScriptEngine = ReliScriptEngine.ReliScriptEngine;
 exports.ReliTokenReader = ReliScriptEngine.ReliTokenReader;
 exports.StackFlowContext = StackContext.StackFlowContext;
