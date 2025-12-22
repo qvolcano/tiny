@@ -1,3 +1,6 @@
+declare class BaseEngine {
+}
+
 interface Bindings {
     containsKey(key: any): void;
     get(key: any): void;
@@ -24,7 +27,96 @@ interface IScriptContext {
     setContext(ctxt: IScriptContext): void;
 }
 
+declare class ScriptScope {
+    values: {};
+    parent: ScriptScope;
+    silent: number;
+    stack: any[];
+    constructor(parent?: ScriptScope);
+    set_value(key: string, value: any): void;
+    get_value(key: string): any;
+}
+declare class ScriptContext {
+    parent: ScriptContext;
+    scope: ScriptScope;
+    constructor(parent?: ScriptContext);
+    down(): void;
+    up(): void;
+    get_value(key: string): any;
+    set_value(key: string, value: any): void;
+}
+declare enum TOKEN_TYPE {
+    NUMBER = 0,
+    STRING = 1,
+    KEY = 2,
+    LP = 3,
+    RP = 4,
+    COM = 5,
+    LB = 6,
+    RB = 7,
+    DEFAULT = 8
+}
+type Token = {
+    value: any;
+    type: any;
+};
+type TokenReader = {
+    type: TOKEN_TYPE;
+    check: (char: string) => boolean;
+    mode?: number;
+    start: string;
+    convert?: Function;
+};
+declare class ScriptRender {
+    serializer: ScriptSerializer;
+    reader: TokenReader;
+    content: string;
+    position: number;
+    last_position: number;
+    constructor(serializer: ScriptSerializer, content: string);
+    read(): {
+        value: string;
+        type: TOKEN_TYPE;
+    };
+}
+declare class ScriptSerializer {
+    root: any;
+    constructor(tokens: any);
+    createReader(script: any): {
+        read(): Token;
+    };
+    getReader(text: string, position: number): any;
+}
+declare class ScriptRuntime {
+    processors: {
+        [key: string]: Function;
+    };
+    constructor(processors: any);
+    input(token: any, context: any): void;
+}
 declare class ScriptEngine {
+    constructor(global?: ScriptScope);
+    eval(script: string, ...args: any[]): void;
+    compile(script: string, ...args: any[]): void;
+    setContext(context: ScriptContext): void;
+}
+declare class ScriptMachine extends ScriptRuntime {
+    processors: {
+        [key: string]: Function;
+    };
+}
+declare class RegexpScriptReder {
+    regexp: RegExp;
+    content: string;
+    serializer: ScriptSerializer;
+    position: number;
+    constructor(serializer: ScriptSerializer, content: string, regexp: RegExp);
+    read(): Token;
+}
+declare class SimpleRegexpScriptSerializer extends ScriptSerializer {
+    regexp: RegExp;
+    super(regexp: RegExp): void;
+    createReader(script: string): any;
 }
 
 declare class BlockScriptRuntime {
@@ -49,54 +141,16 @@ declare class rple {
     readTokens(script: string): any[];
 }
 
-declare enum TOKEN_TYPE {
-    NUMBER = 0,
-    STRING = 1,
-    KEY = 2,
-    LP = 3,
-    RP = 4,
-    COM = 5,
-    LB = 6,
-    RB = 7,
-    DEFAULT = 8
-}
-type Token$1 = {
-    value: any;
-    type: TOKEN_TYPE;
-};
-type Processor = (token: Token$1, context: ScriptContext) => void;
-type FunctionListItem = () => any;
-declare class ScriptScope {
-    values: {};
-    parent: ScriptScope;
-    silent: number;
-    stack: any[];
-    constructor(parent?: ScriptScope);
-    set_value(key: string, value: any): void;
-    get_value(key: string): any;
-}
-declare class ScriptContext {
-    parent: ScriptContext;
-    scope: ScriptScope;
-    list_stack: FunctionList[];
-    constructor(parent?: ScriptContext);
-    down(): void;
-    up(): void;
-    get_value(key: string): any;
-    set_value(key: string, value: any): void;
-}
-declare class FunctionList {
-    items: FunctionListItem[];
-    run(): any;
-}
-declare const createJassRuntimeProcessor: () => Record<TOKEN_TYPE, Processor>;
-declare const JassRuntimeProcessor: Record<TOKEN_TYPE, Processor>;
-type TokenReader = {
-    type: TOKEN_TYPE;
-    check: (char: string) => boolean;
-    mode?: number;
-    start: string;
-    convert?: Function;
+declare const createFunctionList: (stack: any[]) => Function;
+declare const processors: {
+    8: (token: Token, context: ScriptContext) => void;
+    3: (token: Token, context: ScriptContext) => void;
+    4: (token: Token, context: ScriptContext) => void;
+    5: (_token: Token, _context: ScriptContext) => void;
+    6: (_token: Token, context: ScriptContext) => void;
+    7: (_token: Token, context: ScriptContext) => void;
+    1: (token: Token, context: ScriptContext) => void;
+    2: (token: Token, context: ScriptContext) => void;
 };
 declare const BUILTIN_TOKEN_READER: {
     TOKEN_COM: {
@@ -146,39 +200,14 @@ declare const BUILTIN_TOKEN_READER: {
         single: boolean;
     };
 };
-declare class ScriptRender {
-    serializer: ScriptSerializer;
-    reader: TokenReader;
-    content: string;
-    position: number;
-    last_position: number;
-    constructor(serializer: ScriptSerializer, content: string);
-    read(): {
-        value: string;
-        type: TOKEN_TYPE;
-    };
-}
-declare class ScriptSerializer {
-    root: any;
-    constructor(tokens: any);
-    createReader(script: any): ScriptRender;
-    getReader(text: string, position: number): any;
-}
-declare class ScriptRuntime {
-    processors: {
-        [key: string]: Function;
-    };
-    constructor(processors: any);
-    input(token: any, context: any): void;
-}
 declare class JassScriptEngine {
     global: ScriptContext;
     serializer: ScriptSerializer;
     runtime: ScriptRuntime;
     context: ScriptContext;
     constructor(global?: ScriptScope);
-    eval(script: string): void;
-    commpile(script: string, scriptScope: ScriptScope): void;
+    eval(script: string): any;
+    compile(script: string): () => any;
     setContext(context: ScriptContext): void;
 }
 
@@ -230,55 +259,6 @@ declare class StackRuntime {
     up(): void;
 }
 
-declare class TinyScriptContext {
-    get(arg0: string): any;
-}
-
-declare class TinyScriptEngine extends ScriptEngine {
-    reander: TinyTokenReader;
-    eval(script: string, context: TinyScriptContext): any;
-}
-declare class TinyScriptRuntime {
-    context: TinyScriptContext;
-    stack: any[];
-    stackScope: number;
-    start(context: TinyScriptContext): void;
-    input(token: Token): void;
-    output(): void;
-}
-declare enum TinyTokenType {
-    STRING = 0,
-    ADD = 1,
-    SUB = 2,
-    MUP = 3,
-    EXP = 4,
-    BIG = 5,
-    MIN = 6,
-    LK = 7,
-    RK = 8,
-    NUM = 9,
-    SP = 10,
-    VAR = 11
-}
-type TinyTokenReaderRule = {
-    begin: any;
-    end: any;
-    type: any;
-};
-declare class TinyTokenReader {
-    curRule: TinyTokenReaderRule;
-    content: string;
-    rules: TinyTokenReaderRule[];
-    position: number;
-    constructor(rules: TinyTokenReaderRule[]);
-    load(content: string): void;
-    read(): Token | null;
-}
-interface Token {
-    type: number | string;
-    value: string;
-}
-
 declare class TrickScriptEngine extends ScriptEngine {
     eval(script: string, params: any[], context: any & IScriptContext): any;
     compile(script: string, context: IScriptContext): Function | undefined;
@@ -287,4 +267,4 @@ declare class TrickScriptEngine extends ScriptEngine {
     private input;
 }
 
-export { BUILTIN_TOKEN_READER, Bindings, Block, BlockScriptRuntime, FunctionList, IScriptContext, JassRuntimeProcessor, JassScriptEngine, ReliScriptEngine, ReliTokenReader, ScriptContext, ScriptEngine, ScriptRender, ScriptRuntime, ScriptScope, ScriptSerializer, StackFlowContext, StackRuntime, TOKEN_TYPE, TinyScriptContext, TinyScriptEngine, TinyScriptRuntime, TinyTokenReader, TinyTokenReaderRule, TinyTokenType, Token, TokenReader, TrickScriptEngine, builtin, createJassRuntimeProcessor, rple };
+export { BUILTIN_TOKEN_READER, BaseEngine, Bindings, Block, BlockScriptRuntime, IScriptContext, JassScriptEngine, RegexpScriptReder, ReliScriptEngine, ReliTokenReader, ScriptContext, ScriptEngine, ScriptMachine, ScriptRender, ScriptRuntime, ScriptScope, ScriptSerializer, SimpleRegexpScriptSerializer, StackFlowContext, StackRuntime, TOKEN_TYPE, Token, TokenReader, TrickScriptEngine, builtin, createFunctionList, processors, rple };

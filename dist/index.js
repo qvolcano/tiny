@@ -2148,7 +2148,326 @@ var index$b = /*#__PURE__*/Object.freeze({
     __proto__: null
 });
 
+// // 单小便捷灵活的脚本引擎基础
+// export interface Token {
+//     type: number;
+//     value: any;
+// }
+// export interface TokenReader {
+//     type: number;
+//     start: string;
+//     check: (char: string) => boolean;
+//     convert?: Function;
+//     single?: boolean;
+//     mode?: number;
+// }
+// export enum TOKEN_TYPE {
+//     NUMBER,
+//     STRING,
+//     KEY,
+//     LP,
+//     RP,
+//     COM,
+//     DEFAULT
+// }
+// export class ScriptScope {
+//     values:{[key:string]:any} = {}
+//     parent?: ScriptScope
+//     stack: any[] = []
+//     constructor(parent?: ScriptScope) {
+//         this.parent = parent
+//     }
+//     set_value(key: string, value: any) {
+//         this.values[key] = value
+//     }
+//     get_value(key: string) {
+//         return this.values[key] || this.parent?.get_value(key)
+//     }
+// }
+// export class ScriptContext {
+//     parent?: ScriptContext
+//     scope = new ScriptScope()
+//     compileMode = false
+//     constructor(parent?: ScriptContext, compileMode = false) {
+//         this.parent = parent
+//         this.compileMode = compileMode
+//     }
+//     down() {
+//         this.scope = new ScriptScope(this.scope)
+//     }
+//     up() {
+//         this.scope = this.scope.parent!
+//     }
+//     get_value(key: string) {
+//         return this.scope.get_value(key) || this.parent?.get_value(key)
+//     }
+//     set_value(key: string, value: any) {
+//         this.scope.set_value(key, value)
+//     }
+// }
+// export function createOptimizedFunction(method: Function, stack: any[]): Function {
+//     const allConstants = stack.every(arg => typeof arg !== 'function');
+//     if (allConstants) {
+//         const constantResult = method.apply(null, stack);
+//         return function(...runtimeArgs: any[]) {
+//             return constantResult;
+//         };
+//     }
+//     return function(...runtimeArgs: any[]) {
+//         const processedArgs = stack.map(arg => {
+//             if (typeof arg === 'function') {
+//                 return arg();
+//             }
+//             return arg;
+//         });
+//         const combinedArgs = [...processedArgs, ...runtimeArgs];
+//         return method.apply(null, combinedArgs);
+//     };
+// }
+// export abstract class BaseEngine {
+//     protected serializer: any;
+//     protected runtime: any;
+//     constructor(tokens: TokenReader[], processors: { [key: number]: Function }) {
+//         this.serializer = { read: (script: string) => new BaseReader(tokens, script) };
+//         this.runtime = { process: (token: Token, context: any) => (processors[token.type] || processors[0])(token, context) };
+//     }
+// }
+// class BaseReader {
+//     content: string;
+//     position = 0;
+//     tokens: TokenReader[];
+//     constructor(tokens: TokenReader[], content: string) {
+//         this.tokens = tokens;
+//         this.content = content;
+//     }
+//     read(): Token | null {
+//         while (this.position < this.content.length) {
+//             let char = this.content[this.position];
+//             // 跳过空格
+//             if (char === ' ') {
+//                 this.position++;
+//                 continue;
+//             }
+//             let reader = this.findReader(char);
+//             if (!reader) {
+//                 this.position++;
+//                 continue;
+//             }
+//             let start = this.position;
+//             if (reader.single) {
+//                 this.position++;
+//                 let value = char;
+//                 if (reader.convert) value = reader.convert(value);
+//                 return { type: reader.type, value };
+//             }
+//             // 处理字符串特殊情况
+//             if (reader.mode === 1) {
+//                 this.position++; // 跳过开始引号
+//                 start = this.position;
+//                 while (this.position < this.content.length && this.content[this.position] !== "'") {
+//                     this.position++;
+//                 }
+//                 let value = this.content.substring(start, this.position);
+//                 this.position++; // 跳过结束引号
+//                 return { type: reader.type, value };
+//             }
+//             // 处理普通token
+//             this.position++;
+//             while (this.position < this.content.length && reader.check(this.content[this.position])) {
+//                 this.position++;
+//             }
+//             let value = this.content.substring(start, this.position);
+//             if (reader.convert) value = reader.convert(value);
+//             return { type: reader.type, value };
+//         }
+//         return null;
+//     }
+//     private findReader(char: string): TokenReader | null {
+//         return this.tokens.find(token => token.start.includes(char));
+//     }
+// }
+class BaseEngine {
+}
+
+class ScriptScope {
+    constructor(parent) {
+        this.values = {};
+        this.silent = 0;
+        this.stack = [];
+        this.parent = parent;
+    }
+    set_value(key, value) {
+        this.values[key] = value;
+    }
+    get_value(key) {
+        var _a;
+        return this.values[key] || ((_a = this.parent) === null || _a === void 0 ? void 0 : _a.get_value(key));
+    }
+}
+class ScriptContext {
+    constructor(parent) {
+        this.scope = new ScriptScope();
+        this.parent = parent;
+    }
+    down() {
+        let silent = this.scope.silent;
+        this.scope = new ScriptScope(this.scope);
+        this.scope.silent = silent;
+    }
+    up() {
+        this.scope = this.scope.parent;
+    }
+    get_value(key) {
+        var _a;
+        return this.scope.get_value(key) || ((_a = this.parent) === null || _a === void 0 ? void 0 : _a.get_value(key));
+    }
+    set_value(key, value) {
+        this.scope.set_value(key, value);
+    }
+}
+var TOKEN_TYPE;
+(function (TOKEN_TYPE) {
+    TOKEN_TYPE[TOKEN_TYPE["NUMBER"] = 0] = "NUMBER";
+    TOKEN_TYPE[TOKEN_TYPE["STRING"] = 1] = "STRING";
+    TOKEN_TYPE[TOKEN_TYPE["KEY"] = 2] = "KEY";
+    TOKEN_TYPE[TOKEN_TYPE["LP"] = 3] = "LP";
+    TOKEN_TYPE[TOKEN_TYPE["RP"] = 4] = "RP";
+    TOKEN_TYPE[TOKEN_TYPE["COM"] = 5] = "COM";
+    TOKEN_TYPE[TOKEN_TYPE["LB"] = 6] = "LB";
+    TOKEN_TYPE[TOKEN_TYPE["RB"] = 7] = "RB";
+    TOKEN_TYPE[TOKEN_TYPE["DEFAULT"] = 8] = "DEFAULT";
+})(TOKEN_TYPE || (TOKEN_TYPE = {}));
+class ScriptRender {
+    constructor(serializer, content) {
+        this.position = 0;
+        this.last_position = 0;
+        this.serializer = serializer;
+        this.content = content;
+    }
+    read() {
+        let length = this.content.length;
+        let position = this.position;
+        for (; position < length; position++) {
+            let char = this.content.charAt(position);
+            this.reader = this.reader || this.serializer.getReader(this.content, position);
+            if (!this.reader.check(char)) {
+                if (this.last_position == position) {
+                    position = position + 1;
+                }
+                let start = this.last_position;
+                let end = position;
+                if (this.reader.mode == 1) {
+                    if (position - this.last_position <= 1) {
+                        this.last_position++;
+                        continue;
+                    }
+                    else {
+                        position++;
+                    }
+                }
+                let value = this.content.substring(start, end);
+                if (this.reader.convert) {
+                    value = this.reader.convert(value);
+                }
+                let type = this.reader.type;
+                this.last_position = position;
+                this.position = position;
+                this.reader = null;
+                return { value: value, type: type };
+            }
+        }
+    }
+}
+class ScriptSerializer {
+    constructor(tokens) {
+        this.root = {};
+        for (let i of tokens) {
+            let node = this.root;
+            for (let k of i.start) {
+                if (!node[k]) {
+                    node[k] = {};
+                }
+                node = node[k];
+                if (i.single) {
+                    node.value = i;
+                    node = this.root;
+                }
+            }
+            if (node != this.root) {
+                node.value = i;
+            }
+        }
+        this.root.default = tokens[0];
+    }
+    createReader(script) {
+        let stream = new ScriptRender(this, script);
+        return stream;
+    }
+    getReader(text, position) {
+        let node = this.root;
+        let length = text.length;
+        for (; position < length; position++) {
+            let char = text.charAt(position);
+            if (node[char]) {
+                node = node[char];
+            }
+        }
+        return node.value || this.root.default;
+    }
+}
+class ScriptRuntime {
+    constructor(processors) {
+        this.processors = processors;
+    }
+    input(token, context) {
+        (this.processors[token.type] || this.processors[TOKEN_TYPE.DEFAULT])(token, context);
+    }
+}
 class ScriptEngine {
+    constructor(global) {
+    }
+    eval(script, ...args) {
+    }
+    compile(script, ...args) {
+    }
+    setContext(context) {
+    }
+}
+class ScriptMachine extends ScriptRuntime {
+    constructor() {
+        super(...arguments);
+        this.processors = {
+            ["down"]: (context, ...args) => { },
+            ["up"]: (context, ...args) => { },
+            ["call"]: (context, ...args) => { }
+        };
+    }
+}
+class RegexpScriptReder {
+    constructor(serializer, content, regexp) {
+        this.serializer = serializer;
+        this.content = content;
+        this.position = 0;
+        this.regexp = regexp;
+    }
+    read() {
+        let match = this.regexp.exec(this.content.substring(this.position));
+        if (match) {
+            let value = match[0];
+            let type = match[1];
+            this.position += value.length;
+            return { value: value, type: type };
+        }
+    }
+}
+class SimpleRegexpScriptSerializer extends ScriptSerializer {
+    super(regexp) {
+        this.regexp = regexp;
+    }
+    createReader(script) {
+        let stream = new RegexpScriptReder(this, script, this.regexp);
+        return stream;
+    }
 }
 
 class BlockScriptRuntime {
@@ -2247,105 +2566,55 @@ const Word = {
     }
 };
 
-var TOKEN_TYPE;
-(function (TOKEN_TYPE) {
-    TOKEN_TYPE[TOKEN_TYPE["NUMBER"] = 0] = "NUMBER";
-    TOKEN_TYPE[TOKEN_TYPE["STRING"] = 1] = "STRING";
-    TOKEN_TYPE[TOKEN_TYPE["KEY"] = 2] = "KEY";
-    TOKEN_TYPE[TOKEN_TYPE["LP"] = 3] = "LP";
-    TOKEN_TYPE[TOKEN_TYPE["RP"] = 4] = "RP";
-    TOKEN_TYPE[TOKEN_TYPE["COM"] = 5] = "COM";
-    TOKEN_TYPE[TOKEN_TYPE["LB"] = 6] = "LB";
-    TOKEN_TYPE[TOKEN_TYPE["RB"] = 7] = "RB";
-    TOKEN_TYPE[TOKEN_TYPE["DEFAULT"] = 8] = "DEFAULT";
-})(TOKEN_TYPE || (TOKEN_TYPE = {}));
-class ScriptScope {
-    constructor(parent) {
-        this.values = {};
-        this.silent = 0;
-        this.stack = [];
-        this.parent = parent;
-    }
-    set_value(key, value) {
-        this.values[key] = value;
-    }
-    get_value(key) {
-        var _a;
-        return this.values[key] || ((_a = this.parent) === null || _a === void 0 ? void 0 : _a.get_value(key));
-    }
-}
-class ScriptContext {
-    constructor(parent) {
-        this.scope = new ScriptScope();
-        this.list_stack = [];
-        this.parent = parent;
-    }
-    down() {
-        this.scope = new ScriptScope(this.scope);
-    }
-    up() {
-        this.scope = this.scope.parent;
-    }
-    get_value(key) {
-        var _a;
-        return this.scope.get_value(key) || ((_a = this.parent) === null || _a === void 0 ? void 0 : _a.get_value(key));
-    }
-    set_value(key, value) {
-        this.scope.set_value(key, value);
-    }
-}
-class FunctionList {
-    constructor() {
-        this.items = [];
-    }
-    run() {
-        let result;
-        for (let item of this.items) {
-            result = item();
+const isCallNode = (value) => {
+    return Boolean(value && value.__jass_call);
+};
+const evaluateCallNode = (node) => {
+    let args = node.arguments.map((arg) => isCallNode(arg) ? evaluateCallNode(arg) : arg);
+    return node.apply.apply(null, args);
+};
+const createFunctionList = (stack) => {
+    return function () {
+        for (const call of stack) {
+            evaluateCallNode(call);
         }
-        return result;
-    }
-}
-const createJassRuntimeProcessor = () => {
-    const processors = {};
-    processors[TOKEN_TYPE.DEFAULT] = function (token, context) {
+    };
+};
+const processors = {
+    [TOKEN_TYPE.DEFAULT]: function (token, context) {
         context.scope.stack.push(token.value);
-    };
-    processors[TOKEN_TYPE.LP] = function (token, context) {
+    },
+    [TOKEN_TYPE.LP]: function (token, context) {
         context.down();
-    };
-    processors[TOKEN_TYPE.RP] = function (token, context) {
+    },
+    [TOKEN_TYPE.RP]: function (token, context) {
+        let scope = context.scope;
         let stack = context.scope.stack;
         context.up();
-        let mothed_name = context.scope.stack.pop();
-        let mothed = context.get_value(mothed_name);
-        if (context.list_stack.length > 0) {
-            let list = context.list_stack[context.list_stack.length - 1];
-            list.items.push(() => mothed.apply(null, stack));
-            return;
-        }
-        mothed.apply(null, stack);
-    };
-    processors[TOKEN_TYPE.COM] = function (_token, _context) {
-    };
-    processors[TOKEN_TYPE.LB] = function (_token, context) {
-        context.list_stack.push(new FunctionList());
-    };
-    processors[TOKEN_TYPE.RB] = function (_token, context) {
-        if (context.list_stack.length > 0) {
-            let list = context.list_stack.pop();
-            context.scope.stack.push(list);
-        }
-    };
-    processors[TOKEN_TYPE.STRING] = function (token, context) {
+        //必然是function
+        let mothed = context.scope.stack.pop();
+        let call = { __jass_call: true, apply: mothed, arguments: stack.slice(), scope: scope };
+        context.scope.stack.push(call);
+    },
+    [TOKEN_TYPE.COM]: function (_token, _context) {
+    },
+    [TOKEN_TYPE.LB]: function (_token, context) {
+        // 运行期构建函数序列
+        context.scope.silent = 1;
+        context.down();
+    },
+    [TOKEN_TYPE.RB]: function (_token, context) {
+        let stack = context.scope.stack;
+        context.up();
+        context.scope.stack.push(createFunctionList(stack));
+    },
+    [TOKEN_TYPE.STRING]: function (token, context) {
         context.scope.stack.push(token.value);
-    };
-    processors[TOKEN_TYPE.KEY] = function (token, context) {
-        context.scope.stack.push(token.value);
-    };
-    return processors;
+    },
+    [TOKEN_TYPE.KEY]: function (token, context) {
+        context.scope.stack.push(context.get_value(token.value));
+    }
 };
-const JassRuntimeProcessor = createJassRuntimeProcessor();
 const BUILTIN_TOKEN_READER = {
     TOKEN_COM: {
         type: TOKEN_TYPE.COM,
@@ -2396,92 +2665,6 @@ const BUILTIN_TOKEN_READER = {
         single: true
     }
 };
-class ScriptRender {
-    constructor(serializer, content) {
-        this.position = 0;
-        this.last_position = 0;
-        this.serializer = serializer;
-        this.content = content;
-    }
-    read() {
-        let length = this.content.length;
-        let position = this.position;
-        for (; position < length; position++) {
-            let char = this.content.charAt(position);
-            this.reader = this.reader || this.serializer.getReader(this.content, position);
-            if (!this.reader.check(char)) {
-                if (this.last_position == position) {
-                    position = position + 1;
-                }
-                let start = this.last_position;
-                let end = position;
-                if (this.reader.mode == 1) {
-                    if (position - this.last_position <= 1) {
-                        this.last_position++;
-                        continue;
-                    }
-                    else {
-                        position++;
-                    }
-                }
-                let value = this.content.substring(start, end);
-                if (this.reader.convert) {
-                    value = this.reader.convert(value);
-                }
-                let type = this.reader.type;
-                this.last_position = position;
-                this.position = position;
-                this.reader = null;
-                return { value: value, type: type };
-            }
-        }
-    }
-}
-class ScriptSerializer {
-    constructor(tokens) {
-        this.root = {};
-        for (let i of tokens) {
-            let node = this.root;
-            for (let k of i.start) {
-                if (!node[k]) {
-                    node[k] = {};
-                }
-                node = node[k];
-                if (i.single) {
-                    node.value = i;
-                    node = this.root;
-                }
-            }
-            if (node != this.root) {
-                node.value = i;
-            }
-        }
-        this.root.default = tokens[0];
-    }
-    createReader(script) {
-        let stream = new ScriptRender(this, script);
-        return stream;
-    }
-    getReader(text, position) {
-        let node = this.root;
-        let length = text.length;
-        for (; position < length; position++) {
-            let char = text.charAt(position);
-            if (node[char]) {
-                node = node[char];
-            }
-        }
-        return node.value || this.root.default;
-    }
-}
-class ScriptRuntime {
-    constructor(processors) {
-        this.processors = processors;
-    }
-    input(token, context) {
-        (this.processors[token.type] || this.processors[TOKEN_TYPE.DEFAULT])(token, context);
-    }
-}
 class JassScriptEngine {
     constructor(global) {
         this.serializer = new ScriptSerializer([
@@ -2494,33 +2677,32 @@ class JassScriptEngine {
             BUILTIN_TOKEN_READER.TOKEN_NUMBER,
             BUILTIN_TOKEN_READER.TOKEN_STRING_1
         ]);
-        this.runtime = new ScriptRuntime(JassRuntimeProcessor);
+        this.runtime = new ScriptRuntime(processors);
         this.global = new ScriptContext();
         this.global.set_value("print", (...args) => console.log.apply(null, args));
-        this.global.set_value("run", (list) => list && list.run());
-        this.global.set_value("if", (cond, yes, no) => {
-            if (cond) {
-                return yes instanceof FunctionList ? yes.run() : yes;
-            }
-            return no instanceof FunctionList ? no.run() : no;
-        });
+        this.global.set_value("run", (list) => evaluateCallNode(list));
     }
     eval(script) {
         let stream = this.serializer.createReader(script);
         let token = null;
         let context = new ScriptContext(this.global);
         while (token = stream.read()) {
-            console.log(token);
             this.runtime.input(token, context);
         }
+        let root = context.scope.stack.pop();
+        if (isCallNode(root)) {
+            return evaluateCallNode(root);
+        }
     }
-    commpile(script, scriptScope) {
+    compile(script) {
         let stream = this.serializer.createReader(script);
         let token = null;
-        let context = new ScriptContext(this.context);
+        let context = new ScriptContext(this.global);
         while (token = stream.read()) {
             this.runtime.input(token, context);
         }
+        let root = context.scope.stack.pop();
+        return () => evaluateCallNode(root);
     }
     setContext(context) {
         this.context = context;
@@ -2729,113 +2911,6 @@ class StackRuntime {
     }
 }
 
-class TinyScriptContext {
-    get(arg0) {
-    }
-}
-
-class TinyScriptEngine extends ScriptEngine {
-    constructor() {
-        super(...arguments);
-        this.reander = new TinyTokenReader([
-            { begin: "'", end: "'", type: TinyTokenType.STRING },
-            { begin: '"', end: '"', type: TinyTokenType.STRING },
-            { begin: '+', end: '', type: TinyTokenType.ADD },
-            { begin: '-', end: '', type: TinyTokenType.SUB },
-            { begin: '*', end: '', type: TinyTokenType.MUP },
-            { begin: '/', end: '', type: TinyTokenType.EXP },
-            { begin: '>', end: '', type: TinyTokenType.BIG },
-            { begin: '<', end: '', type: TinyTokenType.MIN },
-            { begin: '(', end: '', type: TinyTokenType.LK },
-            { begin: ')', end: '', type: TinyTokenType.RK },
-            { begin: '0123456789', end: '0123456789.', type: TinyTokenType.NUM },
-            { begin: ' ', end: '', type: TinyTokenType.SP },
-            { begin: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_', end: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_", type: TinyTokenType.VAR },
-        ]);
-    }
-    eval(script, context) {
-        let runtime = new TinyScriptRuntime();
-        let reander = this.reander;
-        reander.load(script);
-        runtime.start(context);
-        let token;
-        while (token = reander.read()) {
-            runtime.input(token);
-        }
-        return context.get("@return");
-    }
-}
-class TinyScriptRuntime {
-    constructor() {
-        this.stack = [];
-        this.stackScope = 1;
-    }
-    start(context) {
-    }
-    input(token) {
-        switch (token.type) {
-            case TinyTokenType.STRING:
-            // if(this.context.get(2,))
-            // this.context.put(token.value)
-        }
-    }
-    output() {
-    }
-}
-var TinyTokenType;
-(function (TinyTokenType) {
-    TinyTokenType[TinyTokenType["STRING"] = 0] = "STRING";
-    TinyTokenType[TinyTokenType["ADD"] = 1] = "ADD";
-    TinyTokenType[TinyTokenType["SUB"] = 2] = "SUB";
-    TinyTokenType[TinyTokenType["MUP"] = 3] = "MUP";
-    TinyTokenType[TinyTokenType["EXP"] = 4] = "EXP";
-    TinyTokenType[TinyTokenType["BIG"] = 5] = "BIG";
-    TinyTokenType[TinyTokenType["MIN"] = 6] = "MIN";
-    TinyTokenType[TinyTokenType["LK"] = 7] = "LK";
-    TinyTokenType[TinyTokenType["RK"] = 8] = "RK";
-    TinyTokenType[TinyTokenType["NUM"] = 9] = "NUM";
-    TinyTokenType[TinyTokenType["SP"] = 10] = "SP";
-    TinyTokenType[TinyTokenType["VAR"] = 11] = "VAR";
-})(TinyTokenType || (TinyTokenType = {}));
-class TinyTokenReader {
-    constructor(rules) {
-        this.rules = rules;
-    }
-    load(content) {
-        this.content = content;
-    }
-    read() {
-        let tokenType;
-        let buffer = "";
-        let content = this.content;
-        let length = content.length;
-        let curRule = null;
-        for (let i = this.position; i < length; i++) {
-            if (curRule == null) {
-                for (let l of this.rules) {
-                    if (l.begin.indexOf(content[i]) >= 0) {
-                        curRule = l;
-                    }
-                }
-            }
-            if (curRule) {
-                if (curRule.end.indexOf(i) >= 0) {
-                    buffer = buffer.concat(content[i]);
-                }
-                else {
-                    tokenType = curRule.type;
-                }
-            }
-            if (tokenType) {
-                buffer = "";
-                tokenType = "";
-                return { value: buffer, type: tokenType };
-            }
-        }
-        return null;
-    }
-}
-
 const BuildIn = {
     "+": function (...args) { return args.reduce((c, v) => Number(c) + Number(v)); },
     "-": function (...args) { return args.reduce((c, v) => Number(c) - Number(v)); },
@@ -2907,29 +2982,27 @@ class TrickScriptEngine extends ScriptEngine {
 var index$a = /*#__PURE__*/Object.freeze({
     __proto__: null,
     BUILTIN_TOKEN_READER: BUILTIN_TOKEN_READER,
+    BaseEngine: BaseEngine,
     BlockScriptRuntime: BlockScriptRuntime,
-    FunctionList: FunctionList,
-    JassRuntimeProcessor: JassRuntimeProcessor,
     JassScriptEngine: JassScriptEngine,
+    RegexpScriptReder: RegexpScriptReder,
     ReliScriptEngine: ReliScriptEngine,
     ReliTokenReader: ReliTokenReader,
     ScriptContext: ScriptContext,
     ScriptEngine: ScriptEngine,
+    ScriptMachine: ScriptMachine,
     ScriptRender: ScriptRender,
     ScriptRuntime: ScriptRuntime,
     ScriptScope: ScriptScope,
     ScriptSerializer: ScriptSerializer,
+    SimpleRegexpScriptSerializer: SimpleRegexpScriptSerializer,
     StackFlowContext: StackFlowContext,
     StackRuntime: StackRuntime,
     get TOKEN_TYPE () { return TOKEN_TYPE; },
-    TinyScriptContext: TinyScriptContext,
-    TinyScriptEngine: TinyScriptEngine,
-    TinyScriptRuntime: TinyScriptRuntime,
-    TinyTokenReader: TinyTokenReader,
-    get TinyTokenType () { return TinyTokenType; },
     TrickScriptEngine: TrickScriptEngine,
     builtin: builtin$1,
-    createJassRuntimeProcessor: createJassRuntimeProcessor,
+    createFunctionList: createFunctionList,
+    processors: processors,
     rple: rple
 });
 

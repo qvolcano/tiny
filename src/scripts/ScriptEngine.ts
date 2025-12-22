@@ -54,7 +54,7 @@ export enum TOKEN_TYPE {
     RB,
     DEFAULT
 }
-export type Token = { value: any, type: TOKEN_TYPE }
+export type Token = { value: any, type: any }
 
 export type TokenReader = {
     type: TOKEN_TYPE,
@@ -132,7 +132,7 @@ export class ScriptSerializer {
         this.root.default = tokens[0]
     }
 
-    createReader(script) {
+    createReader(script): { read(): Token } {
         let stream = new ScriptRender(this, script);
         return stream
     }
@@ -150,9 +150,6 @@ export class ScriptSerializer {
     }
 }
 
-
-
-
 export class ScriptRuntime {
     processors: { [key: string]: Function }
     constructor(processors) {
@@ -160,5 +157,65 @@ export class ScriptRuntime {
     }
     input(token: any, context) {
         (this.processors[token.type] || this.processors[TOKEN_TYPE.DEFAULT])(token, context)
+    }
+}
+
+
+
+export class ScriptEngine {
+    constructor(global?: ScriptScope) {
+
+    }
+    eval(script: string, ...args: any[]) {
+
+    }
+
+    compile(script: string, ...args: any[]) {
+
+    }
+    setContext(context: ScriptContext) {
+    }
+}
+
+export class ScriptMachine extends ScriptRuntime {
+
+    processors: { [key: string]: Function } = {
+
+        ["down"]: (context: ScriptContext, ...args: any[]) => { },
+        ["up"]: (context: ScriptContext, ...args: any[]) => { },
+        ["call"]: (context: ScriptContext, ...args: any[]) => { }
+    }
+}
+
+export class RegexpScriptReder {
+    regexp: RegExp
+    content: string
+    serializer: ScriptSerializer
+    position: number
+    constructor(serializer: ScriptSerializer, content: string, regexp: RegExp) {
+        this.serializer = serializer;
+        this.content = content;
+        this.position = 0;
+        this.regexp = regexp;
+    }
+    read(): Token {
+        let match = this.regexp.exec(this.content.substring(this.position))
+        if (match) {
+            let value = match[0]
+            let type = match[1]
+            this.position += value.length
+            return { value: value, type: type }
+        }
+    }
+}
+export class SimpleRegexpScriptSerializer extends ScriptSerializer {
+    regexp: RegExp
+    super(regexp: RegExp) {
+        this.regexp = regexp;
+    }
+
+    createReader(script: string) {
+        let stream = new RegexpScriptReder(this, script, this.regexp);
+        return stream
     }
 }

@@ -1,15 +1,6 @@
 import { ScriptContext, ScriptRuntime, ScriptScope, ScriptSerializer, TOKEN_TYPE, Token } from "../ScriptEngine"
 
-
-type Processor = (token: Token, context: ScriptContext) => void
-type CallNode = { __jass_call: true, apply: Function, arguments: any[] }
-type FunctionListItem = CallNode
-type ListFrame = { list: FunctionList, scope: ScriptScope }
-export type FunctionList = {
-    (): any
-    items: FunctionListItem[]
-    run: () => any
-}
+type CallNode = { __jass_call: true, apply: Function, arguments: any[], scope: ScriptScope }
 
 const isCallNode = (value: any): value is CallNode => {
     return Boolean(value && value.__jass_call)
@@ -20,50 +11,46 @@ const evaluateCallNode = (node: CallNode): any => {
     return node.apply.apply(null, args)
 }
 
-export const createFunctionList = (stack:any[]): Function => {
-    return function(){
+export const createFunctionList = (stack: any[]): Function => {
+    return function () {
         for (const call of stack) {
             evaluateCallNode(call)
         }
     }
 }
-export const processors =  {
-    [TOKEN_TYPE.DEFAULT] : function (token: Token, context: ScriptContext) {
+export const processors = {
+    [TOKEN_TYPE.DEFAULT]: function (token: Token, context: ScriptContext) {
         context.scope.stack.push(token.value)
     },
-    [TOKEN_TYPE.LP] : function (token: Token, context: ScriptContext) {
+    [TOKEN_TYPE.LP]: function (token: Token, context: ScriptContext) {
         context.down()
     },
-    [TOKEN_TYPE.RP] : function (token: Token, context: ScriptContext) {
+    [TOKEN_TYPE.RP]: function (token: Token, context: ScriptContext) {
+        let scope = context.scope
         let stack = context.scope.stack
         context.up()
         //必然是function
         let mothed = context.scope.stack.pop()
-        if (context.scope.silent > 0) {
-            let call:CallNode = { __jass_call: true, apply: mothed, arguments: stack.slice() }
-            context.scope.stack.push(call)
-        }else{
-            let result = mothed.apply(null, stack)
-            context.scope.stack.push(result)
-        }
+        let call: CallNode = { __jass_call: true, apply: mothed, arguments: stack.slice(), scope: scope }
+        context.scope.stack.push(call)
     },
-    [TOKEN_TYPE.COM] : function (_token: Token, _context: ScriptContext) {
+    [TOKEN_TYPE.COM]: function (_token: Token, _context: ScriptContext) {
     },
-    [TOKEN_TYPE.LB] : function (_token: Token, context: ScriptContext) {
+    [TOKEN_TYPE.LB]: function (_token: Token, context: ScriptContext) {
         // 运行期构建函数序列
         context.scope.silent = 1
         context.down()
     },
-    [TOKEN_TYPE.RB] : function (_token: Token, context: ScriptContext) {
+    [TOKEN_TYPE.RB]: function (_token: Token, context: ScriptContext) {
         let stack = context.scope.stack
         context.up()
         context.scope.stack.push(createFunctionList(stack))
 
     },
-    [TOKEN_TYPE.STRING] : function (token: Token, context: ScriptContext) {
+    [TOKEN_TYPE.STRING]: function (token: Token, context: ScriptContext) {
         context.scope.stack.push(token.value)
     },
-    [TOKEN_TYPE.KEY] : function (token: Token, context: ScriptContext) {
+    [TOKEN_TYPE.KEY]: function (token: Token, context: ScriptContext) {
         context.scope.stack.push(context.get_value(token.value))
     }
 }
@@ -139,28 +126,30 @@ export class JassScriptEngine {
         this.runtime = new ScriptRuntime(processors)
         this.global = new ScriptContext()
         this.global.set_value("print", (...args) => console.log.apply(null, args))
-        this.global.set_value("run", (list: FunctionList) => list && list())
+        this.global.set_value("run", (list: CallNode) => evaluateCallNode(list))
     }
     eval(script: string) {
         let stream = this.serializer.createReader(script)
         let token = null;
         let context = new ScriptContext(this.global)
         while (token = stream.read()) {
-            console.log(token)
             this.runtime.input(token, context)
+        }
+        let root = context.scope.stack.pop()
+        if (isCallNode(root)) {
+            return evaluateCallNode(root)
         }
     }
 
     compile(script: string) {
         let stream = this.serializer.createReader(script)
         let token = null;
-        let context = new ScriptContext(this.context || this.global)
-        let program = createFunctionList()
-        // 让整个脚本在列表模式下解析，等价于隐式的 []
+        let context = new ScriptContext(this.global)
         while (token = stream.read()) {
             this.runtime.input(token, context)
         }
-        return () => program()
+        let root = context.scope.stack.pop()
+        return () => evaluateCallNode(root)
     }
     setContext(context: ScriptContext) {
         this.context = context;

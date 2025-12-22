@@ -1,0 +1,1 @@
+import { JassScriptEngine } from "./src/scripts";

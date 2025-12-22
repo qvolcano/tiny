@@ -1,51 +1,14 @@
-export declare enum TOKEN_TYPE {
-    NUMBER = 0,
-    STRING = 1,
-    KEY = 2,
-    LP = 3,
-    RP = 4,
-    COM = 5,
-    LB = 6,
-    RB = 7,
-    DEFAULT = 8
-}
-type Token = {
-    value: any;
-    type: TOKEN_TYPE;
-};
-type Processor = (token: Token, context: ScriptContext) => void;
-type FunctionListItem = () => any;
-export declare class ScriptScope {
-    values: {};
-    parent: ScriptScope;
-    silent: number;
-    stack: any[];
-    constructor(parent?: ScriptScope);
-    set_value(key: string, value: any): void;
-    get_value(key: string): any;
-}
-export declare class ScriptContext {
-    parent: ScriptContext;
-    scope: ScriptScope;
-    list_stack: FunctionList[];
-    constructor(parent?: ScriptContext);
-    down(): void;
-    up(): void;
-    get_value(key: string): any;
-    set_value(key: string, value: any): void;
-}
-export declare class FunctionList {
-    items: FunctionListItem[];
-    run(): any;
-}
-export declare const createJassRuntimeProcessor: () => Record<TOKEN_TYPE, Processor>;
-export declare const JassRuntimeProcessor: Record<TOKEN_TYPE, Processor>;
-export type TokenReader = {
-    type: TOKEN_TYPE;
-    check: (char: string) => boolean;
-    mode?: number;
-    start: string;
-    convert?: Function;
+import { ScriptContext, ScriptRuntime, ScriptScope, ScriptSerializer, TOKEN_TYPE, Token } from "../ScriptEngine";
+export declare const createFunctionList: (stack: any[]) => Function;
+export declare const processors: {
+    8: (token: Token, context: ScriptContext) => void;
+    3: (token: Token, context: ScriptContext) => void;
+    4: (token: Token, context: ScriptContext) => void;
+    5: (_token: Token, _context: ScriptContext) => void;
+    6: (_token: Token, context: ScriptContext) => void;
+    7: (_token: Token, context: ScriptContext) => void;
+    1: (token: Token, context: ScriptContext) => void;
+    2: (token: Token, context: ScriptContext) => void;
 };
 export declare const BUILTIN_TOKEN_READER: {
     TOKEN_COM: {
@@ -95,39 +58,13 @@ export declare const BUILTIN_TOKEN_READER: {
         single: boolean;
     };
 };
-export declare class ScriptRender {
-    serializer: ScriptSerializer;
-    reader: TokenReader;
-    content: string;
-    position: number;
-    last_position: number;
-    constructor(serializer: ScriptSerializer, content: string);
-    read(): {
-        value: string;
-        type: TOKEN_TYPE;
-    };
-}
-export declare class ScriptSerializer {
-    root: any;
-    constructor(tokens: any);
-    createReader(script: any): ScriptRender;
-    getReader(text: string, position: number): any;
-}
-export declare class ScriptRuntime {
-    processors: {
-        [key: string]: Function;
-    };
-    constructor(processors: any);
-    input(token: any, context: any): void;
-}
 export declare class JassScriptEngine {
     global: ScriptContext;
     serializer: ScriptSerializer;
     runtime: ScriptRuntime;
     context: ScriptContext;
     constructor(global?: ScriptScope);
-    eval(script: string): void;
-    commpile(script: string, scriptScope: ScriptScope): void;
+    eval(script: string): any;
+    compile(script: string): () => any;
     setContext(context: ScriptContext): void;
 }
-export {};

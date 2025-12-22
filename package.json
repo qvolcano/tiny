@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "bpush": "gulp&& git add . && git commit -m update && git push",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node -e \"require('fs').rmSync('.tmp-test',{recursive:true,force:true})\" && npx tsc test.ts --target ES2022 --module ES2022 --moduleResolution node --checkJs false --outDir .tmp-test --pretty false && node .tmp-test/test.js"
   },
   "repository": {
     "type": "git",
