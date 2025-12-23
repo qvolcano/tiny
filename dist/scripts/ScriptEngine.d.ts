@@ -1,6 +1,7 @@
 export declare class ScriptScope {
     values: {};
     parent: ScriptScope;
+    type: number;
     silent: number;
     stack: any[];
     constructor(parent?: ScriptScope);
@@ -46,7 +47,7 @@ export declare class ScriptRender {
     last_position: number;
     constructor(serializer: ScriptSerializer, content: string);
     read(): {
-        value: string;
+        value: any;
         type: TOKEN_TYPE;
     };
 }

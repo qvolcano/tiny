@@ -2292,6 +2292,7 @@ class BaseEngine {
 class ScriptScope {
     constructor(parent) {
         this.values = {};
+        this.type = 0;
         this.silent = 0;
         this.stack = [];
         this.parent = parent;
@@ -2306,8 +2307,8 @@ class ScriptScope {
 }
 class ScriptContext {
     constructor(parent) {
-        this.scope = new ScriptScope();
         this.parent = parent;
+        this.scope = new ScriptScope(parent === null || parent === void 0 ? void 0 : parent.scope);
     }
     down() {
         let silent = this.scope.silent;
@@ -2351,20 +2352,43 @@ class ScriptRender {
             let char = this.content.charAt(position);
             this.reader = this.reader || this.serializer.getReader(this.content, position);
             if (!this.reader.check(char)) {
-                if (this.last_position == position) {
+                let shouldSkip = this.last_position == position;
+                if (this.reader.mode == 1) {
+                    // 跳过开始引号，并在结束引号时返回内容（支持空串与 1 字符）
+                    if (shouldSkip) {
+                        let nextPosition = position + 1;
+                        if (nextPosition < length && this.content.charAt(nextPosition) === this.reader.start) {
+                            let type = this.reader.type;
+                            this.last_position = nextPosition + 1;
+                            this.position = nextPosition + 1;
+                            this.reader = null;
+                            return { value: "", type: type };
+                        }
+                        // 跳过开始引号
+                        this.last_position = position + 1;
+                        position = position + 1;
+                        continue;
+                    }
+                    else {
+                        let start = this.last_position;
+                        let end = position;
+                        let value = this.content.substring(start, end);
+                        if (this.reader.convert) {
+                            value = this.reader.convert(value);
+                        }
+                        let type = this.reader.type;
+                        position = position + 1;
+                        this.last_position = position;
+                        this.position = position;
+                        this.reader = null;
+                        return { value: value, type: type };
+                    }
+                }
+                if (shouldSkip) {
                     position = position + 1;
                 }
                 let start = this.last_position;
                 let end = position;
-                if (this.reader.mode == 1) {
-                    if (position - this.last_position <= 1) {
-                        this.last_position++;
-                        continue;
-                    }
-                    else {
-                        position++;
-                    }
-                }
                 let value = this.content.substring(start, end);
                 if (this.reader.convert) {
                     value = this.reader.convert(value);
@@ -2470,6 +2494,81 @@ class SimpleRegexpScriptSerializer extends ScriptSerializer {
     }
 }
 
+var ReliBuildin = {
+    "if": function (a) { return Boolean(a); },
+    "not": function (a) { return !a; }, //逻辑反
+    "and": function (a, b) { return a && b; }, //逻辑和
+    "or": function (a, b) { return a || b; }, //逻辑与
+    "mte": function (a, b) { return a >= b; }, //大于等于
+    "lte": function (a, b) { return a <= b; }, //小于等于
+    "lt": function (a, b) { return a < b; }, //小于
+    "mt": function (a, b) { return a > b; }, //大于
+    "sum": function (a, b) { return a + b; }, //加
+    "imsub": function (a, b) { return a - b; }, //减
+    "product": function (a, b) { return a * b; }, //乘
+    "quotient": function (a, b) { return a / b; }, //除
+    "pow": function (a, b) { return Math.pow(a, b); }, //次方
+    "mod": function (a, b) { return a % b; }, //取模
+};
+class ReliScriptEngine {
+    countFTokens(tokens, context, params) {
+        let values = [];
+        for (let i of tokens) {
+            if (typeof context[i] == "function") {
+                values.push(context[i].apply(null, values.splice(values.length - i.length)));
+            }
+            else if (params && params[i] != undefined) {
+                values.push(params[i]);
+            }
+            else {
+                values.push(Number(i));
+            }
+        }
+        return values[0];
+    }
+    eval(script) {
+        this.reader.load(script);
+        let tokens = this.reader.readAll();
+        return this.countFTokens(tokens, ReliBuildin);
+    }
+}
+/**解释嵌套函数字符串为逆波兰
+ * 例子: and(and(not(isCharge),mte(Strength,80)),and(mte(Wing,28),lt(Mount,32)))
+ * 输出: isCharge,not,Strength,80,mte,and,Wing,28,mte,Mount,32,lt,and,and
+ */
+class ReliTokenReader {
+    constructor() {
+        this.posistion = 0;
+    }
+    load(script) {
+        let ts = script.split(/((?=[\)\,])|\b)/g);
+        let vl = [];
+        let sl = [];
+        for (let token of ts) {
+            if (token != "") {
+                if (token == ")") {
+                    vl = vl.concat(sl.splice(sl.lastIndexOf("(") + 1));
+                    sl.pop();
+                    let r = sl.pop();
+                    if (r) {
+                        vl.push(r);
+                    }
+                }
+                else if (token != ",") {
+                    sl.push(token);
+                }
+            }
+        }
+        this.tokens = vl.concat(sl);
+    }
+    read() {
+        return this.tokens[this.posistion++];
+    }
+    readAll() {
+        return this.tokens;
+    }
+}
+
 class BlockScriptRuntime {
     evalBlock(block) {
     }
@@ -2566,47 +2665,67 @@ const Word = {
     }
 };
 
-const isCallNode = (value) => {
-    return Boolean(value && value.__jass_call);
-};
-const evaluateCallNode = (node) => {
-    let args = node.arguments.map((arg) => isCallNode(arg) ? evaluateCallNode(arg) : arg);
-    return node.apply.apply(null, args);
-};
-const createFunctionList = (stack) => {
-    return function () {
-        for (const call of stack) {
-            evaluateCallNode(call);
+var SCOPE_TYPE;
+(function (SCOPE_TYPE) {
+    SCOPE_TYPE[SCOPE_TYPE["CALL"] = 0] = "CALL";
+    SCOPE_TYPE[SCOPE_TYPE["LIST_FN"] = 1] = "LIST_FN";
+})(SCOPE_TYPE || (SCOPE_TYPE = {}));
+const builders = [];
+const evaluateCallNode = (scope) => {
+    let method = scope.stack[0];
+    let args = [];
+    for (let i = 1; i < scope.stack.length; i++) {
+        let value = scope.stack[i];
+        if (value instanceof ScriptScope) {
+            value = builders[value.type](value);
         }
-    };
+        args.push(value);
+    }
+    return method.apply(scope, args);
 };
+const buildFunctionList = (scope) => {
+    let list = [];
+    for (const item of scope.stack) {
+        if (item instanceof ScriptScope) {
+            const node = item;
+            list.push(() => builders[node.type](node));
+            continue;
+        }
+        if (typeof item === "function") {
+            list.push(item);
+            continue;
+        }
+        throw new Error("jass: list item must be function");
+    }
+    return list;
+};
+builders[SCOPE_TYPE.CALL] = evaluateCallNode;
+builders[SCOPE_TYPE.LIST_FN] = buildFunctionList;
 const processors = {
     [TOKEN_TYPE.DEFAULT]: function (token, context) {
         context.scope.stack.push(token.value);
     },
-    [TOKEN_TYPE.LP]: function (token, context) {
+    [TOKEN_TYPE.LP]: function (_token, context) {
+        let method = context.scope.stack.pop();
         context.down();
+        context.scope.type = SCOPE_TYPE.CALL;
+        context.scope.stack.push(method);
     },
-    [TOKEN_TYPE.RP]: function (token, context) {
+    [TOKEN_TYPE.RP]: function (_token, context) {
         let scope = context.scope;
-        let stack = context.scope.stack;
         context.up();
-        //必然是function
-        let mothed = context.scope.stack.pop();
-        let call = { __jass_call: true, apply: mothed, arguments: stack.slice(), scope: scope };
-        context.scope.stack.push(call);
+        context.scope.stack.push(scope);
     },
     [TOKEN_TYPE.COM]: function (_token, _context) {
     },
     [TOKEN_TYPE.LB]: function (_token, context) {
-        // 运行期构建函数序列
-        context.scope.silent = 1;
         context.down();
+        context.scope.type = SCOPE_TYPE.LIST_FN;
     },
     [TOKEN_TYPE.RB]: function (_token, context) {
-        let stack = context.scope.stack;
+        let scope = context.scope;
         context.up();
-        context.scope.stack.push(createFunctionList(stack));
+        context.scope.stack.push(scope);
     },
     [TOKEN_TYPE.STRING]: function (token, context) {
         context.scope.stack.push(token.value);
@@ -2643,7 +2762,7 @@ const BUILTIN_TOKEN_READER = {
     },
     TOKEN_NUMBER: {
         type: TOKEN_TYPE.NUMBER,
-        start: "01234556789",
+        start: "0123456789",
         convert: Number,
         check: (char) => char.charCodeAt(0) >= 45 && char.charCodeAt(0) <= 57,
         single: true
@@ -2653,14 +2772,25 @@ const BUILTIN_TOKEN_READER = {
         start: "'",
         convert: String,
         check: (char) => char != "'",
-        mode: 1,
-        single: true
+        mode: 1
+    },
+    TOKEN_STRING_2: {
+        type: TOKEN_TYPE.STRING,
+        start: '"',
+        convert: String,
+        check: (char) => char != '"',
+        mode: 1
     },
     TOKEN_KEY: {
         type: TOKEN_TYPE.KEY,
         start: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
         check: (char) => {
-            return char.charCodeAt(0) >= 45 && char.charCodeAt(0) <= 128;
+            let code = char.charCodeAt(0);
+            return (code >= 48 && code <= 57)
+                || (code >= 65 && code <= 90)
+                || (code >= 97 && code <= 122)
+                || char === "_"
+                || char === "-";
         },
         single: true
     }
@@ -2675,34 +2805,46 @@ class JassScriptEngine {
             BUILTIN_TOKEN_READER.TOKEN_LP,
             BUILTIN_TOKEN_READER.TOKEN_RP,
             BUILTIN_TOKEN_READER.TOKEN_NUMBER,
-            BUILTIN_TOKEN_READER.TOKEN_STRING_1
+            BUILTIN_TOKEN_READER.TOKEN_STRING_1,
+            BUILTIN_TOKEN_READER.TOKEN_STRING_2
         ]);
         this.runtime = new ScriptRuntime(processors);
         this.global = new ScriptContext();
         this.global.set_value("print", (...args) => console.log.apply(null, args));
-        this.global.set_value("run", (list) => evaluateCallNode(list));
+        let run = (list) => { for (const fn of list) {
+            fn();
+        } };
+        this.global.set_value("run", run);
     }
     eval(script) {
         let stream = this.serializer.createReader(script);
         let token = null;
         let context = new ScriptContext(this.global);
+        context.scope.type = SCOPE_TYPE.CALL;
         while (token = stream.read()) {
             this.runtime.input(token, context);
         }
         let root = context.scope.stack.pop();
-        if (isCallNode(root)) {
-            return evaluateCallNode(root);
+        if (root instanceof ScriptScope) {
+            return builders[root.type](root);
         }
+        return root;
     }
     compile(script) {
         let stream = this.serializer.createReader(script);
         let token = null;
         let context = new ScriptContext(this.global);
+        context.scope.type = SCOPE_TYPE.CALL;
         while (token = stream.read()) {
             this.runtime.input(token, context);
         }
         let root = context.scope.stack.pop();
-        return () => evaluateCallNode(root);
+        return () => {
+            if (root instanceof ScriptScope) {
+                return builders[root.type](root);
+            }
+            return root;
+        };
     }
     setContext(context) {
         this.context = context;
@@ -2711,81 +2853,6 @@ class JassScriptEngine {
 //? compile 编译成function
 //? scope隔离
 //? 暂停继续
-
-var ReliBuildin = {
-    "if": function (a) { return Boolean(a); },
-    "not": function (a) { return !a; }, //逻辑反
-    "and": function (a, b) { return a && b; }, //逻辑和
-    "or": function (a, b) { return a || b; }, //逻辑与
-    "mte": function (a, b) { return a >= b; }, //大于等于
-    "lte": function (a, b) { return a <= b; }, //小于等于
-    "lt": function (a, b) { return a < b; }, //小于
-    "mt": function (a, b) { return a > b; }, //大于
-    "sum": function (a, b) { return a + b; }, //加
-    "imsub": function (a, b) { return a - b; }, //减
-    "product": function (a, b) { return a * b; }, //乘
-    "quotient": function (a, b) { return a / b; }, //除
-    "pow": function (a, b) { return Math.pow(a, b); }, //次方
-    "mod": function (a, b) { return a % b; }, //取模
-};
-class ReliScriptEngine {
-    countFTokens(tokens, context, params) {
-        let values = [];
-        for (let i of tokens) {
-            if (typeof context[i] == "function") {
-                values.push(context[i].apply(null, values.splice(values.length - i.length)));
-            }
-            else if (params && params[i] != undefined) {
-                values.push(params[i]);
-            }
-            else {
-                values.push(Number(i));
-            }
-        }
-        return values[0];
-    }
-    eval(script) {
-        this.reader.load(script);
-        let tokens = this.reader.readAll();
-        return this.countFTokens(tokens, ReliBuildin);
-    }
-}
-/**解释嵌套函数字符串为逆波兰
- * 例子: and(and(not(isCharge),mte(Strength,80)),and(mte(Wing,28),lt(Mount,32)))
- * 输出: isCharge,not,Strength,80,mte,and,Wing,28,mte,Mount,32,lt,and,and
- */
-class ReliTokenReader {
-    constructor() {
-        this.posistion = 0;
-    }
-    load(script) {
-        let ts = script.split(/((?=[\)\,])|\b)/g);
-        let vl = [];
-        let sl = [];
-        for (let token of ts) {
-            if (token != "") {
-                if (token == ")") {
-                    vl = vl.concat(sl.splice(sl.lastIndexOf("(") + 1));
-                    sl.pop();
-                    let r = sl.pop();
-                    if (r) {
-                        vl.push(r);
-                    }
-                }
-                else if (token != ",") {
-                    sl.push(token);
-                }
-            }
-        }
-        this.tokens = vl.concat(sl);
-    }
-    read() {
-        return this.tokens[this.posistion++];
-    }
-    readAll() {
-        return this.tokens;
-    }
-}
 
 class StackFlowContext {
     constructor() {
@@ -3001,7 +3068,6 @@ var index$a = /*#__PURE__*/Object.freeze({
     get TOKEN_TYPE () { return TOKEN_TYPE; },
     TrickScriptEngine: TrickScriptEngine,
     builtin: builtin$1,
-    createFunctionList: createFunctionList,
     processors: processors,
     rple: rple
 });

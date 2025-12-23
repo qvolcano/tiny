@@ -30,6 +30,7 @@ interface IScriptContext {
 declare class ScriptScope {
     values: {};
     parent: ScriptScope;
+    type: number;
     silent: number;
     stack: any[];
     constructor(parent?: ScriptScope);
@@ -75,7 +76,7 @@ declare class ScriptRender {
     last_position: number;
     constructor(serializer: ScriptSerializer, content: string);
     read(): {
-        value: string;
+        value: any;
         type: TOKEN_TYPE;
     };
 }
@@ -119,6 +120,25 @@ declare class SimpleRegexpScriptSerializer extends ScriptSerializer {
     createReader(script: string): any;
 }
 
+declare class ReliScriptEngine {
+    reader: ReliTokenReader;
+    countFTokens(tokens: string[], context: any, params?: {
+        [key: string]: any;
+    }): number;
+    eval(script: string): number;
+}
+/**解释嵌套函数字符串为逆波兰
+ * 例子: and(and(not(isCharge),mte(Strength,80)),and(mte(Wing,28),lt(Mount,32)))
+ * 输出: isCharge,not,Strength,80,mte,and,Wing,28,mte,Mount,32,lt,and,and
+ */
+declare class ReliTokenReader {
+    private tokens;
+    private posistion;
+    load(script: string): void;
+    read(): string;
+    readAll(): string[];
+}
+
 declare class BlockScriptRuntime {
     evalBlock(block: Block): void;
 }
@@ -141,11 +161,10 @@ declare class rple {
     readTokens(script: string): any[];
 }
 
-declare const createFunctionList: (stack: any[]) => Function;
 declare const processors: {
     8: (token: Token, context: ScriptContext) => void;
-    3: (token: Token, context: ScriptContext) => void;
-    4: (token: Token, context: ScriptContext) => void;
+    3: (_token: Token, context: ScriptContext) => void;
+    4: (_token: Token, context: ScriptContext) => void;
     5: (_token: Token, _context: ScriptContext) => void;
     6: (_token: Token, context: ScriptContext) => void;
     7: (_token: Token, context: ScriptContext) => void;
@@ -191,7 +210,13 @@ declare const BUILTIN_TOKEN_READER: {
         convert: StringConstructor;
         check: (char: string) => boolean;
         mode: number;
-        single: boolean;
+    };
+    TOKEN_STRING_2: {
+        type: TOKEN_TYPE;
+        start: string;
+        convert: StringConstructor;
+        check: (char: string) => boolean;
+        mode: number;
     };
     TOKEN_KEY: {
         type: TOKEN_TYPE;
@@ -209,25 +234,6 @@ declare class JassScriptEngine {
     eval(script: string): any;
     compile(script: string): () => any;
     setContext(context: ScriptContext): void;
-}
-
-declare class ReliScriptEngine {
-    reader: ReliTokenReader;
-    countFTokens(tokens: string[], context: any, params?: {
-        [key: string]: any;
-    }): number;
-    eval(script: string): number;
-}
-/**解释嵌套函数字符串为逆波兰
- * 例子: and(and(not(isCharge),mte(Strength,80)),and(mte(Wing,28),lt(Mount,32)))
- * 输出: isCharge,not,Strength,80,mte,and,Wing,28,mte,Mount,32,lt,and,and
- */
-declare class ReliTokenReader {
-    private tokens;
-    private posistion;
-    load(script: string): void;
-    read(): string;
-    readAll(): string[];
 }
 
 declare class StackFlowContext implements IScriptContext {
@@ -267,4 +273,4 @@ declare class TrickScriptEngine extends ScriptEngine {
     private input;
 }
 
-export { BUILTIN_TOKEN_READER, BaseEngine, Bindings, Block, BlockScriptRuntime, IScriptContext, JassScriptEngine, RegexpScriptReder, ReliScriptEngine, ReliTokenReader, ScriptContext, ScriptEngine, ScriptMachine, ScriptRender, ScriptRuntime, ScriptScope, ScriptSerializer, SimpleRegexpScriptSerializer, StackFlowContext, StackRuntime, TOKEN_TYPE, Token, TokenReader, TrickScriptEngine, builtin, createFunctionList, processors, rple };
+export { BUILTIN_TOKEN_READER, BaseEngine, Bindings, Block, BlockScriptRuntime, IScriptContext, JassScriptEngine, RegexpScriptReder, ReliScriptEngine, ReliTokenReader, ScriptContext, ScriptEngine, ScriptMachine, ScriptRender, ScriptRuntime, ScriptScope, ScriptSerializer, SimpleRegexpScriptSerializer, StackFlowContext, StackRuntime, TOKEN_TYPE, Token, TokenReader, TrickScriptEngine, builtin, processors, rple };

@@ -3,6 +3,7 @@
 class ScriptScope {
     constructor(parent) {
         this.values = {};
+        this.type = 0;
         this.silent = 0;
         this.stack = [];
         this.parent = parent;
@@ -17,8 +18,8 @@ class ScriptScope {
 }
 class ScriptContext {
     constructor(parent) {
-        this.scope = new ScriptScope();
         this.parent = parent;
+        this.scope = new ScriptScope(parent === null || parent === void 0 ? void 0 : parent.scope);
     }
     down() {
         let silent = this.scope.silent;
@@ -62,20 +63,43 @@ class ScriptRender {
             let char = this.content.charAt(position);
             this.reader = this.reader || this.serializer.getReader(this.content, position);
             if (!this.reader.check(char)) {
-                if (this.last_position == position) {
+                let shouldSkip = this.last_position == position;
+                if (this.reader.mode == 1) {
+                    // 跳过开始引号，并在结束引号时返回内容（支持空串与 1 字符）
+                    if (shouldSkip) {
+                        let nextPosition = position + 1;
+                        if (nextPosition < length && this.content.charAt(nextPosition) === this.reader.start) {
+                            let type = this.reader.type;
+                            this.last_position = nextPosition + 1;
+                            this.position = nextPosition + 1;
+                            this.reader = null;
+                            return { value: "", type: type };
+                        }
+                        // 跳过开始引号
+                        this.last_position = position + 1;
+                        position = position + 1;
+                        continue;
+                    }
+                    else {
+                        let start = this.last_position;
+                        let end = position;
+                        let value = this.content.substring(start, end);
+                        if (this.reader.convert) {
+                            value = this.reader.convert(value);
+                        }
+                        let type = this.reader.type;
+                        position = position + 1;
+                        this.last_position = position;
+                        this.position = position;
+                        this.reader = null;
+                        return { value: value, type: type };
+                    }
+                }
+                if (shouldSkip) {
                     position = position + 1;
                 }
                 let start = this.last_position;
                 let end = position;
-                if (this.reader.mode == 1) {
-                    if (position - this.last_position <= 1) {
-                        this.last_position++;
-                        continue;
-                    }
-                    else {
-                        position++;
-                    }
-                }
                 let value = this.content.substring(start, end);
                 if (this.reader.convert) {
                     value = this.reader.convert(value);

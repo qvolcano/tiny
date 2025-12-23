@@ -1,9 +1,8 @@
 import { ScriptContext, ScriptRuntime, ScriptScope, ScriptSerializer, TOKEN_TYPE, Token } from "../ScriptEngine";
-export declare const createFunctionList: (stack: any[]) => Function;
 export declare const processors: {
     8: (token: Token, context: ScriptContext) => void;
-    3: (token: Token, context: ScriptContext) => void;
-    4: (token: Token, context: ScriptContext) => void;
+    3: (_token: Token, context: ScriptContext) => void;
+    4: (_token: Token, context: ScriptContext) => void;
     5: (_token: Token, _context: ScriptContext) => void;
     6: (_token: Token, context: ScriptContext) => void;
     7: (_token: Token, context: ScriptContext) => void;
@@ -49,7 +48,13 @@ export declare const BUILTIN_TOKEN_READER: {
         convert: StringConstructor;
         check: (char: string) => boolean;
         mode: number;
-        single: boolean;
+    };
+    TOKEN_STRING_2: {
+        type: TOKEN_TYPE;
+        start: string;
+        convert: StringConstructor;
+        check: (char: string) => boolean;
+        mode: number;
     };
     TOKEN_KEY: {
         type: TOKEN_TYPE;

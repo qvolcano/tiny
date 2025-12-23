@@ -2,47 +2,67 @@
 
 var ScriptEngine = require('../../ScriptEngine/index.cjs.js');
 
-const isCallNode = (value) => {
-    return Boolean(value && value.__jass_call);
-};
-const evaluateCallNode = (node) => {
-    let args = node.arguments.map((arg) => isCallNode(arg) ? evaluateCallNode(arg) : arg);
-    return node.apply.apply(null, args);
-};
-const createFunctionList = (stack) => {
-    return function () {
-        for (const call of stack) {
-            evaluateCallNode(call);
+var SCOPE_TYPE;
+(function (SCOPE_TYPE) {
+    SCOPE_TYPE[SCOPE_TYPE["CALL"] = 0] = "CALL";
+    SCOPE_TYPE[SCOPE_TYPE["LIST_FN"] = 1] = "LIST_FN";
+})(SCOPE_TYPE || (SCOPE_TYPE = {}));
+const builders = [];
+const evaluateCallNode = (scope) => {
+    let method = scope.stack[0];
+    let args = [];
+    for (let i = 1; i < scope.stack.length; i++) {
+        let value = scope.stack[i];
+        if (value instanceof ScriptEngine.ScriptScope) {
+            value = builders[value.type](value);
         }
-    };
+        args.push(value);
+    }
+    return method.apply(scope, args);
 };
+const buildFunctionList = (scope) => {
+    let list = [];
+    for (const item of scope.stack) {
+        if (item instanceof ScriptEngine.ScriptScope) {
+            const node = item;
+            list.push(() => builders[node.type](node));
+            continue;
+        }
+        if (typeof item === "function") {
+            list.push(item);
+            continue;
+        }
+        throw new Error("jass: list item must be function");
+    }
+    return list;
+};
+builders[SCOPE_TYPE.CALL] = evaluateCallNode;
+builders[SCOPE_TYPE.LIST_FN] = buildFunctionList;
 const processors = {
     [ScriptEngine.TOKEN_TYPE.DEFAULT]: function (token, context) {
         context.scope.stack.push(token.value);
     },
-    [ScriptEngine.TOKEN_TYPE.LP]: function (token, context) {
+    [ScriptEngine.TOKEN_TYPE.LP]: function (_token, context) {
+        let method = context.scope.stack.pop();
         context.down();
+        context.scope.type = SCOPE_TYPE.CALL;
+        context.scope.stack.push(method);
     },
-    [ScriptEngine.TOKEN_TYPE.RP]: function (token, context) {
+    [ScriptEngine.TOKEN_TYPE.RP]: function (_token, context) {
         let scope = context.scope;
-        let stack = context.scope.stack;
         context.up();
-        //必然是function
-        let mothed = context.scope.stack.pop();
-        let call = { __jass_call: true, apply: mothed, arguments: stack.slice(), scope: scope };
-        context.scope.stack.push(call);
+        context.scope.stack.push(scope);
     },
     [ScriptEngine.TOKEN_TYPE.COM]: function (_token, _context) {
     },
     [ScriptEngine.TOKEN_TYPE.LB]: function (_token, context) {
-        // 运行期构建函数序列
-        context.scope.silent = 1;
         context.down();
+        context.scope.type = SCOPE_TYPE.LIST_FN;
     },
     [ScriptEngine.TOKEN_TYPE.RB]: function (_token, context) {
-        let stack = context.scope.stack;
+        let scope = context.scope;
         context.up();
-        context.scope.stack.push(createFunctionList(stack));
+        context.scope.stack.push(scope);
     },
     [ScriptEngine.TOKEN_TYPE.STRING]: function (token, context) {
         context.scope.stack.push(token.value);
@@ -79,7 +99,7 @@ const BUILTIN_TOKEN_READER = {
     },
     TOKEN_NUMBER: {
         type: ScriptEngine.TOKEN_TYPE.NUMBER,
-        start: "01234556789",
+        start: "0123456789",
         convert: Number,
         check: (char) => char.charCodeAt(0) >= 45 && char.charCodeAt(0) <= 57,
         single: true
@@ -89,14 +109,25 @@ const BUILTIN_TOKEN_READER = {
         start: "'",
         convert: String,
         check: (char) => char != "'",
-        mode: 1,
-        single: true
+        mode: 1
+    },
+    TOKEN_STRING_2: {
+        type: ScriptEngine.TOKEN_TYPE.STRING,
+        start: '"',
+        convert: String,
+        check: (char) => char != '"',
+        mode: 1
     },
     TOKEN_KEY: {
         type: ScriptEngine.TOKEN_TYPE.KEY,
         start: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
         check: (char) => {
-            return char.charCodeAt(0) >= 45 && char.charCodeAt(0) <= 128;
+            let code = char.charCodeAt(0);
+            return (code >= 48 && code <= 57)
+                || (code >= 65 && code <= 90)
+                || (code >= 97 && code <= 122)
+                || char === "_"
+                || char === "-";
         },
         single: true
     }
@@ -111,34 +142,46 @@ class JassScriptEngine {
             BUILTIN_TOKEN_READER.TOKEN_LP,
             BUILTIN_TOKEN_READER.TOKEN_RP,
             BUILTIN_TOKEN_READER.TOKEN_NUMBER,
-            BUILTIN_TOKEN_READER.TOKEN_STRING_1
+            BUILTIN_TOKEN_READER.TOKEN_STRING_1,
+            BUILTIN_TOKEN_READER.TOKEN_STRING_2
         ]);
         this.runtime = new ScriptEngine.ScriptRuntime(processors);
         this.global = new ScriptEngine.ScriptContext();
         this.global.set_value("print", (...args) => console.log.apply(null, args));
-        this.global.set_value("run", (list) => evaluateCallNode(list));
+        let run = (list) => { for (const fn of list) {
+            fn();
+        } };
+        this.global.set_value("run", run);
     }
     eval(script) {
         let stream = this.serializer.createReader(script);
         let token = null;
         let context = new ScriptEngine.ScriptContext(this.global);
+        context.scope.type = SCOPE_TYPE.CALL;
         while (token = stream.read()) {
             this.runtime.input(token, context);
         }
         let root = context.scope.stack.pop();
-        if (isCallNode(root)) {
-            return evaluateCallNode(root);
+        if (root instanceof ScriptEngine.ScriptScope) {
+            return builders[root.type](root);
         }
+        return root;
     }
     compile(script) {
         let stream = this.serializer.createReader(script);
         let token = null;
         let context = new ScriptEngine.ScriptContext(this.global);
+        context.scope.type = SCOPE_TYPE.CALL;
         while (token = stream.read()) {
             this.runtime.input(token, context);
         }
         let root = context.scope.stack.pop();
-        return () => evaluateCallNode(root);
+        return () => {
+            if (root instanceof ScriptEngine.ScriptScope) {
+                return builders[root.type](root);
+            }
+            return root;
+        };
     }
     setContext(context) {
         this.context = context;
@@ -150,5 +193,4 @@ class JassScriptEngine {
 
 exports.BUILTIN_TOKEN_READER = BUILTIN_TOKEN_READER;
 exports.JassScriptEngine = JassScriptEngine;
-exports.createFunctionList = createFunctionList;
 exports.processors = processors;
